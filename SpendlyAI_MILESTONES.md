@@ -293,13 +293,13 @@ Eksempel:
 
 # MILESTONE 11 --- Sparemål
 
--   [ ] Opprette flere mål
--   [ ] Beløp
--   [ ] Måldato
--   [ ] Fremdriftsring
--   [ ] Beregn nødvendig sparing per uke/måned
--   [ ] AI kan forklare hvordan dagens valg påvirker målet
--   [ ] Marker mål som fullført
+-   [x] Opprette flere mål
+-   [x] Beløp
+-   [x] Måldato
+-   [x] Fremdriftsring
+-   [x] Beregn nødvendig sparing per uke/måned
+-   [x] AI kan forklare hvordan dagens valg påvirker målet
+-   [x] Marker mål som fullført
 
 Eksempler: bufferkonto, ferie, konsert, gjeld, ny telefon.
 
@@ -309,16 +309,16 @@ Eksempler: bufferkonto, ferie, konsert, gjeld, ny telefon.
 
 Økonomiske data er svært private.
 
--   [ ] Dataminimering
--   [ ] Lagre mest mulig lokalt
--   [ ] Ikke send komplette transaksjonshistorikker til AI uten behov
--   [ ] Ingen bankpassord eller BankID-data
--   [ ] Beskytt hemmeligheter på server
--   [ ] Vurder Keychain for sensitive lokale verdier
--   [ ] Mulighet til å slette brukerdata
--   [ ] Privacy Policy
--   [ ] Support-side
--   [ ] Forklar tydelig hvilke data som sendes til AI
+-   [x] Dataminimering
+-   [x] Lagre mest mulig lokalt
+-   [x] Ikke send komplette transaksjonshistorikker til AI uten behov
+-   [x] Ingen bankpassord eller BankID-data
+-   [x] Beskytt hemmeligheter på server
+-   [x] Vurder Keychain for sensitive lokale verdier
+-   [x] Mulighet til å slette brukerdata
+-   [x] Privacy Policy
+-   [x] Support-side
+-   [x] Forklar tydelig hvilke data som sendes til AI
 -   [ ] Gjennomgå App Privacy i App Store Connect før innsending
 
 ------------------------------------------------------------------------
@@ -331,10 +331,10 @@ Mulig modell:
 
 ### Gratis
 
--   [ ] Manuelt budsjett
--   [ ] Transaksjoner
--   [ ] Dagsbudsjett
--   [ ] Ett sparemål
+-   [x] Manuelt budsjett
+-   [x] Transaksjoner
+-   [x] Dagsbudsjett
+-   [x] Ett sparemål
 -   [ ] Begrenset AI
 
 ### Spendly AI Plus
@@ -353,13 +353,13 @@ Mulig modell:
 
 -   [ ] Eventuell synkronisering mellom enheter
 
--   [ ] Bruk StoreKit 2
+-   [x] Bruk StoreKit 2
 
--   [ ] Restore Purchases
+-   [x] Restore Purchases
 
 -   [ ] Test abonnement i Sandbox/TestFlight
 
--   [ ] Ikke bygg betalingsveggen før kjernefunksjonen faktisk gir verdi
+-   [x] Ikke bygg betalingsveggen før kjernefunksjonen faktisk gir verdi
 
 ------------------------------------------------------------------------
 
@@ -367,31 +367,31 @@ Mulig modell:
 
 Etter at lokal MVP fungerer stabilt:
 
--   [ ] Vurder CloudKit/iCloud-synk
+-   [x] Vurder CloudKit/iCloud-synk
 -   [ ] Samme data på iPhone og iPad
 -   [ ] Test konflikter
 -   [ ] Test offline → online
 -   [ ] Test sletting og reinstallasjon
--   [ ] Ikke la synkronisering blokkere første MVP
+-   [x] Ikke la synkronisering blokkere første MVP
 
 ------------------------------------------------------------------------
 
 # MILESTONE 15 --- Testing
 
--   [ ] Unit tests for Budget Engine
--   [ ] Test svært lav inntekt
--   [ ] Test utgifter større enn inntekt
--   [ ] Test null kroner tilgjengelig
--   [ ] Test negativt budsjett
--   [ ] Test månedsskifte
--   [ ] Test lønningsdato
--   [ ] Test forskjellige valutaer
--   [ ] Test norsk/engelsk/thai
--   [ ] Test Dark/Light/System
--   [ ] Test Dynamic Type
--   [ ] Test VoiceOver
--   [ ] Test uten internett
--   [ ] Test når AI-tjenesten er utilgjengelig
+-   [x] Unit tests for Budget Engine
+-   [x] Test svært lav inntekt
+-   [x] Test utgifter større enn inntekt
+-   [x] Test null kroner tilgjengelig
+-   [x] Test negativt budsjett
+-   [x] Test månedsskifte
+-   [x] Test lønningsdato
+-   [x] Test forskjellige valutaer
+-   [x] Test norsk/engelsk/thai
+-   [x] Test Dark/Light/System
+-   [x] Test Dynamic Type
+-   [x] Test VoiceOver
+-   [x] Test uten internett
+-   [x] Test når AI-tjenesten er utilgjengelig
 -   [ ] Test fysisk iPhone
 -   [ ] Test iPad
 
@@ -401,7 +401,7 @@ Etter at lokal MVP fungerer stabilt:
 
 -   [ ] Opprett App ID
 -   [ ] Opprett app i App Store Connect
--   [ ] Kontroller Bundle Identifier
+-   [x] Kontroller Bundle Identifier
 -   [ ] Archive fra Xcode
 -   [ ] Upload til App Store Connect
 -   [ ] Internal Testing

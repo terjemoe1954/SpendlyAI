@@ -181,7 +181,7 @@ extension BudgetService {
                     isActive: expense.isActive
                 )
             },
-            savingsGoals: savingsGoals.map { goal in
+            savingsGoals: savingsGoals.filter { !$0.isCompleted }.map { goal in
                 BudgetSavingsGoal(
                     targetAmount: goal.targetAmount,
                     savedAmount: goal.savedAmount,

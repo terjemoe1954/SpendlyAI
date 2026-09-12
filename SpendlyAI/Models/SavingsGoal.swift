@@ -13,18 +13,21 @@ final class SavingsGoal {
     var targetDate: Date
     var savedAmount: Decimal
     var priority: GoalPriority
+    var isCompleted: Bool
 
     init(
         name: String,
         targetAmount: Decimal,
         targetDate: Date,
         savedAmount: Decimal = 0,
-        priority: GoalPriority = .medium
+        priority: GoalPriority = .medium,
+        isCompleted: Bool = false
     ) {
         self.name = name
         self.targetAmount = targetAmount
         self.targetDate = targetDate
         self.savedAmount = savedAmount
         self.priority = priority
+        self.isCompleted = isCompleted
     }
 }

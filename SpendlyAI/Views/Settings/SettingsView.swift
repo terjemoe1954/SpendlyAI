@@ -82,6 +82,24 @@ struct SettingsView: View {
             } label: {
                 Label("settings.profile", systemImage: "person.crop.circle")
             }
+
+            NavigationLink {
+                PlanAndPlusView()
+            } label: {
+                Label("settings.planAndPlus", systemImage: "crown")
+            }
+
+            NavigationLink {
+                iCloudSyncReadinessView()
+            } label: {
+                Label("settings.iCloudSync", systemImage: "icloud")
+            }
+
+            NavigationLink {
+                PrivacyAndSupportView()
+            } label: {
+                Label("settings.privacyAndSupport", systemImage: "lock.shield")
+            }
         }
     }
 

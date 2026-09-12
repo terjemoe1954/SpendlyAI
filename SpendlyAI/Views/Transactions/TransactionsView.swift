@@ -98,6 +98,7 @@ private struct TransactionRowView: View {
                 .foregroundStyle(AppStyle.accentColor)
                 .frame(width: 32, height: 32)
                 .background(AppStyle.accentColor.opacity(0.12), in: Circle())
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 4) {
                 if transaction.transactionDescription.isEmpty {

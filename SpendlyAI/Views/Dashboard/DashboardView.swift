@@ -282,11 +282,12 @@ private struct DashboardMetricView: View {
             Image(systemName: systemImage)
                 .font(.headline)
                 .foregroundStyle(AppStyle.accentColor)
+                .accessibilityHidden(true)
 
             Text(value)
                 .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(titleKey)
                 .font(.caption)
