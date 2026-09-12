@@ -416,21 +416,21 @@ Etter at lokal MVP fungerer stabilt:
 
 # MILESTONE 17 --- App Store
 
--   [ ] Endelig appnavn
--   [ ] Appikon
--   [ ] Subtitle
--   [ ] App Description
--   [ ] Keywords
+-   [x] Endelig appnavn
+-   [x] Appikon
+-   [x] Subtitle
+-   [x] App Description
+-   [x] Keywords
 -   [ ] Screenshots
 -   [ ] Privacy Policy URL
 -   [ ] Support URL
 -   [ ] App Privacy
--   [ ] Age Rating
+-   [x] Age Rating
 -   [ ] Pris / abonnement
 -   [ ] Subscription metadata hvis aktuelt
--   [ ] Review Notes
--   [ ] Demo-/testinformasjon dersom Apple trenger det
--   [ ] Version `1.0`
+-   [x] Review Notes
+-   [x] Demo-/testinformasjon dersom Apple trenger det
+-   [x] Version `1.0`
 -   [ ] Production build
 -   [ ] Send til App Review
 
