@@ -1,0 +1,597 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R] /Count 2 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Length 7847 >>
+stream
+BT /F2 24 Tf 42.0 772.0 Td (Spendly AI - Testdata) Tj ET
+BT /F1 10 Tf 42.0 747.0 Td (Bruk bare fiktive tall. Ikke legg inn ekte okonomidata naar du tester.) Tj ET
+BT /F2 15 Tf 42.0 718.0 Td (Testperson) Tj ET
+0.91 0.96 0.93 rg
+42.0 687.0 190.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 687.0 190.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 696.0 Td (Felt) Tj ET
+0.91 0.96 0.93 rg
+232.0 687.0 320.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+232.0 687.0 320.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 237.0 696.0 Td (Verdi) Tj ET
+0.72 0.80 0.75 RG
+42.0 663.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 672.0 Td (Navn) Tj ET
+0.72 0.80 0.75 RG
+232.0 663.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 672.0 Td (Bruk ikke ekte navn) Tj ET
+0.72 0.80 0.75 RG
+42.0 639.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 648.0 Td (Valuta) Tj ET
+0.72 0.80 0.75 RG
+232.0 639.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 648.0 Td (NOK) Tj ET
+0.72 0.80 0.75 RG
+42.0 615.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 624.0 Td (Maanedlig nettoinntekt) Tj ET
+0.72 0.80 0.75 RG
+232.0 615.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 624.0 Td (32 000 kr) Tj ET
+0.72 0.80 0.75 RG
+42.0 591.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 600.0 Td (Neste loenningsdato) Tj ET
+0.72 0.80 0.75 RG
+232.0 591.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 600.0 Td (20. neste maaned) Tj ET
+0.72 0.80 0.75 RG
+42.0 567.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 576.0 Td (Minimumsbuffer) Tj ET
+0.72 0.80 0.75 RG
+232.0 567.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 576.0 Td (3 000 kr) Tj ET
+BT /F2 15 Tf 42.0 531.0 Td (Rekkefolge For Testing) Tj ET
+BT /F2 12 Tf 42.0 503.0 Td (1. Onboarding) Tj ET
+0.91 0.96 0.93 rg
+42.0 472.0 190.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 472.0 190.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 481.0 Td (Felt) Tj ET
+0.91 0.96 0.93 rg
+232.0 472.0 320.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+232.0 472.0 320.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 237.0 481.0 Td (Verdi) Tj ET
+0.72 0.80 0.75 RG
+42.0 448.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 457.0 Td (Maanedlig nettoinntekt) Tj ET
+0.72 0.80 0.75 RG
+232.0 448.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 457.0 Td (32 000 kr) Tj ET
+0.72 0.80 0.75 RG
+42.0 424.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 433.0 Td (Neste loenningsdato) Tj ET
+0.72 0.80 0.75 RG
+232.0 424.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 433.0 Td (20. neste maaned) Tj ET
+0.72 0.80 0.75 RG
+42.0 400.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 409.0 Td (Minimumsbuffer) Tj ET
+0.72 0.80 0.75 RG
+232.0 400.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 409.0 Td (3 000 kr) Tj ET
+0.72 0.80 0.75 RG
+42.0 376.0 190.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 385.0 Td (Valuta) Tj ET
+0.72 0.80 0.75 RG
+232.0 376.0 320.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 237.0 385.0 Td (NOK) Tj ET
+BT /F2 12 Tf 42.0 343.0 Td (2. Faste Utgifter) Tj ET
+0.91 0.96 0.93 rg
+42.0 312.0 115.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 312.0 115.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 321.0 Td (Navn) Tj ET
+0.91 0.96 0.93 rg
+157.0 312.0 85.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+157.0 312.0 85.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 162.0 321.0 Td (Belop) Tj ET
+0.91 0.96 0.93 rg
+242.0 312.0 45.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+242.0 312.0 45.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 247.0 321.0 Td (Dag) Tj ET
+0.91 0.96 0.93 rg
+287.0 312.0 185.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+287.0 312.0 185.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 292.0 321.0 Td (Kategori) Tj ET
+0.91 0.96 0.93 rg
+472.0 312.0 80.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+472.0 312.0 80.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 477.0 321.0 Td (Aktiv) Tj ET
+0.72 0.80 0.75 RG
+42.0 288.0 115.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 297.0 Td (Husleie) Tj ET
+0.72 0.80 0.75 RG
+157.0 288.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 162.0 297.0 Td (12 500 kr) Tj ET
+0.72 0.80 0.75 RG
+242.0 288.0 45.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 247.0 297.0 Td (1) Tj ET
+0.72 0.80 0.75 RG
+287.0 288.0 185.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 292.0 297.0 Td (Housing) Tj ET
+0.72 0.80 0.75 RG
+472.0 288.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 297.0 Td (Ja) Tj ET
+0.72 0.80 0.75 RG
+42.0 264.0 115.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 273.0 Td (Strom) Tj ET
+0.72 0.80 0.75 RG
+157.0 264.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 162.0 273.0 Td (1 200 kr) Tj ET
+0.72 0.80 0.75 RG
+242.0 264.0 45.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 247.0 273.0 Td (5) Tj ET
+0.72 0.80 0.75 RG
+287.0 264.0 185.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 292.0 273.0 Td (Utilities) Tj ET
+0.72 0.80 0.75 RG
+472.0 264.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 273.0 Td (Ja) Tj ET
+0.72 0.80 0.75 RG
+42.0 240.0 115.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 249.0 Td (Mobil) Tj ET
+0.72 0.80 0.75 RG
+157.0 240.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 162.0 249.0 Td (399 kr) Tj ET
+0.72 0.80 0.75 RG
+242.0 240.0 45.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 247.0 249.0 Td (10) Tj ET
+0.72 0.80 0.75 RG
+287.0 240.0 185.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 292.0 249.0 Td (Subscriptions) Tj ET
+0.72 0.80 0.75 RG
+472.0 240.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 249.0 Td (Ja) Tj ET
+0.72 0.80 0.75 RG
+42.0 216.0 115.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 225.0 Td (Transport) Tj ET
+0.72 0.80 0.75 RG
+157.0 216.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 162.0 225.0 Td (950 kr) Tj ET
+0.72 0.80 0.75 RG
+242.0 216.0 45.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 247.0 225.0 Td (12) Tj ET
+0.72 0.80 0.75 RG
+287.0 216.0 185.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 292.0 225.0 Td (Transport) Tj ET
+0.72 0.80 0.75 RG
+472.0 216.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 225.0 Td (Ja) Tj ET
+0.72 0.80 0.75 RG
+42.0 192.0 115.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 201.0 Td (Forsikring) Tj ET
+0.72 0.80 0.75 RG
+157.0 192.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 162.0 201.0 Td (650 kr) Tj ET
+0.72 0.80 0.75 RG
+242.0 192.0 45.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 247.0 201.0 Td (15) Tj ET
+0.72 0.80 0.75 RG
+287.0 192.0 185.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 292.0 201.0 Td (Insurance) Tj ET
+0.72 0.80 0.75 RG
+472.0 192.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 201.0 Td (Ja) Tj ET
+BT /F2 12 Tf 42.0 159.0 Td (3. Sparemaal) Tj ET
+0.91 0.96 0.93 rg
+42.0 128.0 105.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 128.0 105.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 137.0 Td (Navn) Tj ET
+0.91 0.96 0.93 rg
+147.0 128.0 90.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+147.0 128.0 90.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 152.0 137.0 Td (Maalbelop) Tj ET
+0.91 0.96 0.93 rg
+237.0 128.0 85.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+237.0 128.0 85.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 242.0 137.0 Td (Spart) Tj ET
+0.91 0.96 0.93 rg
+322.0 128.0 150.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+322.0 128.0 150.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 327.0 137.0 Td (Maaldato) Tj ET
+0.91 0.96 0.93 rg
+472.0 128.0 80.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+472.0 128.0 80.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 477.0 137.0 Td (Prioritet) Tj ET
+0.72 0.80 0.75 RG
+42.0 104.0 105.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 113.0 Td (Bufferkonto) Tj ET
+0.72 0.80 0.75 RG
+147.0 104.0 90.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 152.0 113.0 Td (10 000 kr) Tj ET
+0.72 0.80 0.75 RG
+237.0 104.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 242.0 113.0 Td (2 500 kr) Tj ET
+0.72 0.80 0.75 RG
+322.0 104.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 327.0 113.0 Td (Om 3 maaneder) Tj ET
+0.72 0.80 0.75 RG
+472.0 104.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 113.0 Td (High) Tj ET
+0.72 0.80 0.75 RG
+42.0 80.0 105.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 89.0 Td (Ferie) Tj ET
+0.72 0.80 0.75 RG
+147.0 80.0 90.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 152.0 89.0 Td (18 000 kr) Tj ET
+0.72 0.80 0.75 RG
+237.0 80.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 242.0 89.0 Td (4 000 kr) Tj ET
+0.72 0.80 0.75 RG
+322.0 80.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 327.0 89.0 Td (Om 6 maaneder) Tj ET
+0.72 0.80 0.75 RG
+472.0 80.0 80.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 477.0 89.0 Td (Medium) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 5 0 R >>
+endobj
+7 0 obj
+<< /Length 6063 >>
+stream
+BT /F2 12 Tf 42.0 784.0 Td (4. Kjop / Transaksjoner) Tj ET
+0.91 0.96 0.93 rg
+42.0 753.0 145.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 753.0 145.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 762.0 Td (Beskrivelse) Tj ET
+0.91 0.96 0.93 rg
+187.0 753.0 85.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+187.0 753.0 85.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 192.0 762.0 Td (Belop) Tj ET
+0.91 0.96 0.93 rg
+272.0 753.0 145.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+272.0 753.0 145.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 277.0 762.0 Td (Kategori) Tj ET
+0.91 0.96 0.93 rg
+417.0 753.0 135.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+417.0 753.0 135.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 422.0 762.0 Td (Dato) Tj ET
+0.72 0.80 0.75 RG
+42.0 729.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 738.0 Td (Matbutikk) Tj ET
+0.72 0.80 0.75 RG
+187.0 729.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 738.0 Td (420 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 729.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 738.0 Td (Groceries) Tj ET
+0.72 0.80 0.75 RG
+417.0 729.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 738.0 Td (I dag) Tj ET
+0.72 0.80 0.75 RG
+42.0 705.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 714.0 Td (Kaffe) Tj ET
+0.72 0.80 0.75 RG
+187.0 705.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 714.0 Td (58 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 705.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 714.0 Td (Food) Tj ET
+0.72 0.80 0.75 RG
+417.0 705.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 714.0 Td (I dag) Tj ET
+0.72 0.80 0.75 RG
+42.0 681.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 690.0 Td (Buss) Tj ET
+0.72 0.80 0.75 RG
+187.0 681.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 690.0 Td (44 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 681.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 690.0 Td (Transport) Tj ET
+0.72 0.80 0.75 RG
+417.0 681.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 690.0 Td (I dag) Tj ET
+0.72 0.80 0.75 RG
+42.0 657.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 666.0 Td (Lunsj) Tj ET
+0.72 0.80 0.75 RG
+187.0 657.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 666.0 Td (169 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 657.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 666.0 Td (Food) Tj ET
+0.72 0.80 0.75 RG
+417.0 657.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 666.0 Td (I dag) Tj ET
+0.72 0.80 0.75 RG
+42.0 633.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 642.0 Td (Kino) Tj ET
+0.72 0.80 0.75 RG
+187.0 633.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 642.0 Td (210 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 633.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 642.0 Td (Entertainment) Tj ET
+0.72 0.80 0.75 RG
+417.0 633.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 642.0 Td (I gaar) Tj ET
+0.72 0.80 0.75 RG
+42.0 609.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 618.0 Td (Apotek) Tj ET
+0.72 0.80 0.75 RG
+187.0 609.0 85.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 192.0 618.0 Td (280 kr) Tj ET
+0.72 0.80 0.75 RG
+272.0 609.0 145.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 277.0 618.0 Td (Health) Tj ET
+0.72 0.80 0.75 RG
+417.0 609.0 135.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 422.0 618.0 Td (For 2 dager siden) Tj ET
+BT /F2 12 Tf 42.0 576.0 Td (5. AI-Sporsmaal Aa Teste) Tj ET
+0.91 0.96 0.93 rg
+42.0 545.0 40.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 545.0 40.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 554.0 Td (Nr) Tj ET
+0.91 0.96 0.93 rg
+82.0 545.0 470.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+82.0 545.0 470.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 87.0 554.0 Td (Sporsmaal) Tj ET
+0.72 0.80 0.75 RG
+42.0 521.0 40.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 530.0 Td (1) Tj ET
+0.72 0.80 0.75 RG
+82.0 521.0 470.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 87.0 530.0 Td (Har jeg raad til aa spise ute i kveld?) Tj ET
+0.72 0.80 0.75 RG
+42.0 497.0 40.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 506.0 Td (2) Tj ET
+0.72 0.80 0.75 RG
+82.0 497.0 470.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 87.0 506.0 Td (Hva skjer hvis jeg bruker 500 kr i dag?) Tj ET
+0.72 0.80 0.75 RG
+42.0 473.0 40.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 482.0 Td (3) Tj ET
+0.72 0.80 0.75 RG
+82.0 473.0 470.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 87.0 482.0 Td (Hvor mye kan jeg bruke resten av uken?) Tj ET
+0.72 0.80 0.75 RG
+42.0 449.0 40.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 458.0 Td (4) Tj ET
+0.72 0.80 0.75 RG
+82.0 449.0 470.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 87.0 458.0 Td (Hvordan paavirker dette sparemaalet mitt?) Tj ET
+0.72 0.80 0.75 RG
+42.0 425.0 40.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 434.0 Td (5) Tj ET
+0.72 0.80 0.75 RG
+82.0 425.0 470.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 87.0 434.0 Td (Hvorfor er dagsbudsjettet mitt lavere enn forventet?) Tj ET
+BT /F2 12 Tf 42.0 392.0 Td (6. Ekstra Edge Case-Test) Tj ET
+0.91 0.96 0.93 rg
+42.0 361.0 150.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+42.0 361.0 150.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 47.0 370.0 Td (Scenario) Tj ET
+0.91 0.96 0.93 rg
+192.0 361.0 360.0 24.0 re f
+0 0 0 rg
+0.72 0.80 0.75 RG
+192.0 361.0 360.0 24.0 re S
+0 0 0 RG
+BT /F2 8.5 Tf 197.0 370.0 Td (Hva du gjor) Tj ET
+0.72 0.80 0.75 RG
+42.0 337.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 346.0 Td (Presset budsjett) Tj ET
+0.72 0.80 0.75 RG
+192.0 337.0 360.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 197.0 346.0 Td (Legg til kjop paa 2 500 kr i dag) Tj ET
+0.72 0.80 0.75 RG
+42.0 313.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 322.0 Td (Negativt budsjett) Tj ET
+0.72 0.80 0.75 RG
+192.0 313.0 360.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 197.0 322.0 Td (Legg til ekstra fast utgift paa 20 000 kr) Tj ET
+0.72 0.80 0.75 RG
+42.0 289.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 298.0 Td (Null tilgjengelig) Tj ET
+0.72 0.80 0.75 RG
+192.0 289.0 360.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 197.0 298.0 Td (Sett minimumsbuffer veldig hoyt, f.eks. 25 000 kr) Tj ET
+0.72 0.80 0.75 RG
+42.0 265.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 274.0 Td (Spraak) Tj ET
+0.72 0.80 0.75 RG
+192.0 265.0 360.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 197.0 274.0 Td (Bytt iOS-spraak til English, Norsk, Thai) Tj ET
+0.72 0.80 0.75 RG
+42.0 241.0 150.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 47.0 250.0 Td (Utseende) Tj ET
+0.72 0.80 0.75 RG
+192.0 241.0 360.0 24.0 re S
+0 0 0 RG
+BT /F1 8.5 Tf 197.0 250.0 Td (Test Light, Dark og System) Tj ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents 7 0 R >>
+endobj
+xref
+0 9
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000121 00000 n 
+0000000191 00000 n 
+0000000266 00000 n 
+0000008165 00000 n 
+0000008301 00000 n 
+0000014416 00000 n 
+trailer
+<< /Size 9 /Root 1 0 R >>
+startxref
+14552
+%%EOF

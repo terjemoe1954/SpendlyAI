@@ -1,6 +1,6 @@
 //
-//  DashboardView.swift
-//  SpendlyAI
+//   DashboardView.swift
+//   SpendlyAI
 //
 
 import SwiftData
