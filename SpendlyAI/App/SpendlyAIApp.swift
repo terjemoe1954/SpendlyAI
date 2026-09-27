@@ -8,9 +8,14 @@ import SwiftUI
 
 @main
 struct SpendlyAIApp: App {
+    private let purchaseService = PurchaseService()
+
     var body: some Scene {
         WindowGroup {
             RootView()
+                .task {
+                    await purchaseService.listenForTransactions()
+                }
         }
         .modelContainer(for: [
             UserFinancialProfile.self,

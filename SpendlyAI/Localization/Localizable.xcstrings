@@ -5,20 +5,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Answer"
+            "state" : "machine_translated",
+            "value" : "Budget guidance"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Svar"
+            "state" : "machine_translated",
+            "value" : "Budsjettveiledning"
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "คำตอบ"
+            "state" : "machine_translated",
+            "value" : "คำแนะนำด้านงบประมาณ"
           }
         }
       }
@@ -27,20 +27,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ask Spendly AI"
+            "state" : "machine_translated",
+            "value" : "Get guidance"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Spør Spendly AI"
+            "state" : "machine_translated",
+            "value" : "Få veiledning"
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "ถาม Spendly AI"
+            "state" : "machine_translated",
+            "value" : "รับคำแนะนำ"
           }
         }
       }
@@ -387,20 +387,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "What do you want to know?"
+            "state" : "machine_translated",
+            "value" : "Ask about your budget"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hva vil du vite?"
+            "state" : "machine_translated",
+            "value" : "Spør om budsjettet ditt"
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "คุณอยากรู้อะไร"
+            "state" : "machine_translated",
+            "value" : "ถามเกี่ยวกับงบประมาณ"
           }
         }
       }
@@ -3331,19 +3331,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "StoreKit 2 support is wired for the monthly Plus product ID. Sandbox/TestFlight testing still requires an App Store Connect subscription product."
+            "value" : "Subscriptions are managed securely by the App Store. You can restore purchases at any time."
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "StoreKit 2-støtte er koblet til månedlig Plus-produkt-ID. Sandbox/TestFlight-testing krever fortsatt et abonnementsprodukt i App Store Connect."
+            "state" : "needs_review",
+            "value" : "Abonnementer administreres sikkert av App Store. Du kan gjenopprette kjøp når som helst."
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "เชื่อมต่อ StoreKit 2 กับรหัสผลิตภัณฑ์ Plus รายเดือนแล้ว การทดสอบ Sandbox/TestFlight ยังต้องมีผลิตภัณฑ์สมัครสมาชิกใน App Store Connect"
+            "state" : "needs_review",
+            "value" : "การสมัครสมาชิกได้รับการจัดการอย่างปลอดภัยโดย App Store และคุณสามารถกู้คืนการซื้อได้ทุกเมื่อ"
           }
         }
       }
@@ -5360,20 +5360,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI"
+            "state" : "machine_translated",
+            "value" : "Budget Help"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI"
+            "state" : "machine_translated",
+            "value" : "Budsjetthjelp"
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "AI"
+            "state" : "machine_translated",
+            "value" : "ตัวช่วยด้านงบประมาณ"
           }
         }
       }

@@ -13,6 +13,7 @@ struct AIView: View {
     @Query private var transactions: [Transaction]
 
     @State private var viewModel = AIViewModel()
+    @FocusState private var isQuestionFocused: Bool
 
     private let budgetService = BudgetService()
 
@@ -50,8 +51,17 @@ struct AIView: View {
                 }
                 .padding(AppSpacing.large)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(AppStyle.screenBackground)
             .navigationTitle("tab.ai")
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("common.ok") {
+                        isQuestionFocused = false
+                    }
+                }
+            }
         }
     }
 
@@ -86,10 +96,12 @@ struct AIView: View {
                 .font(.headline)
 
             TextField("ai.question.placeholder", text: $viewModel.question, axis: .vertical)
+                .focused($isQuestionFocused)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(3...6)
 
             Button {
+                isQuestionFocused = false
                 Task {
                     await viewModel.ask(using: budgetContext)
                 }
@@ -112,6 +124,7 @@ struct AIView: View {
 
             ForEach(exampleQuestionKeys, id: \.self) { questionKey in
                 Button {
+                    isQuestionFocused = false
                     viewModel.question = localizedString(for: questionKey)
                     Task {
                         await viewModel.ask(using: budgetContext)

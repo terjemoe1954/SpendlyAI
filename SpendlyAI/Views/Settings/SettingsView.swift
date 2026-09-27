@@ -39,9 +39,9 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 profileSection
-                appInformationSection
-                appearanceSection
                 notificationSection
+                appearanceSection
+                appInformationSection
             }
             .navigationTitle("tab.settings")
             .onChange(of: dailyReminderEnabled) { _, isEnabled in

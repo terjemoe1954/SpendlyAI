@@ -86,6 +86,17 @@ struct PurchaseService {
         }
     }
 
+    func listenForTransactions() async {
+        for await verificationResult in StoreKit.Transaction.updates {
+            guard case .verified(let transaction) = verificationResult,
+                  PurchaseConfiguration.plusProductIDs.contains(transaction.productID) else {
+                continue
+            }
+
+            await transaction.finish()
+        }
+    }
+
     func restorePurchases() async -> Result<PurchaseState, PurchaseServiceError> {
         do {
             try await AppStore.sync()

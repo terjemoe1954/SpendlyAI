@@ -40,7 +40,7 @@ ikke få lov til å finne på saldoer eller regnestykker.
 -   [x] Sett Build til `1`
 -   [x] Endre `ContentView` til `DashboardView`
 -   [x] Opprett `RootTabView`
--   [ ] Kontroller at appen bygger på simulator og fysisk iPhone
+-   [x] Kontroller at appen bygger på simulator og fysisk iPhone
 
 ### Foreslått mappestruktur
 
@@ -357,7 +357,7 @@ Mulig modell:
 
 -   [x] Restore Purchases
 
--   [ ] Test abonnement i Sandbox/TestFlight
+-   [x] Test abonnement i Sandbox/TestFlight (TestFlight 1.0.1 build 1: kjøp, vedvarende Plus-status og Restore Purchases bestått)
 
 -   [x] Ikke bygg betalingsveggen før kjernefunksjonen faktisk gir verdi
 
@@ -392,25 +392,25 @@ Etter at lokal MVP fungerer stabilt:
 -   [x] Test VoiceOver
 -   [x] Test uten internett
 -   [x] Test når AI-tjenesten er utilgjengelig
--   [ ] Test fysisk iPhone
--   [ ] Test iPad
+-   [x] Test fysisk iPhone
+-   [x] Test iPad (iPad Air 11-inch simulator, stående og liggende)
 
 ------------------------------------------------------------------------
 
 # MILESTONE 16 --- TestFlight
 
--   [ ] Opprett App ID
--   [ ] Opprett app i App Store Connect
+-   [x] Opprett App ID
+-   [x] Opprett app i App Store Connect
 -   [x] Kontroller Bundle Identifier
--   [ ] Archive fra Xcode
--   [ ] Upload til App Store Connect
--   [ ] Internal Testing
--   [ ] Test onboarding med helt ny installasjon
--   [ ] Test AI-kostnader
--   [ ] Test varsler over flere dager
--   [ ] Samle tilbakemeldinger
--   [ ] Rett krasj og kritiske problemer
--   [ ] External Testing når appen er stabil
+-   [x] Archive fra Xcode (1.0.1 build 1)
+-   [x] Upload til App Store Connect (1.0.1 build 1)
+-   [x] Internal Testing (TestFlight 1.0.1 build 1)
+-   [x] Test onboarding med helt ny installasjon
+-   [x] Test AI-kostnader (MVP bruker kun lokale budsjettsvar: 0 kr. Ekte AI-backend og kostnadsmåling utsettes til etter første TestFlight-runde)
+-   [x] Test varsler over flere dager (daglig gjentakelse bekreftet på fysisk iPhone over to dager)
+-   [x] Samle tilbakemeldinger (TestFlight-feedback sendt fra fysisk iPhone og mottatt i App Store Connect)
+-   [x] Rett krasj og kritiske problemer (ingen krasj registrert i TestFlight etter intern test)
+-   [ ] External Testing når appen er stabil (1.0.1 build 2 sendt til Beta App Review 27.09.2026)
 
 ------------------------------------------------------------------------
 
