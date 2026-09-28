@@ -1,6 +1,6 @@
 //
-//  RootTabView.swift
-//  SpendlyAI
+// RootTabView.swift
+// SpendlyAI
 //
 
 import SwiftUI
