@@ -410,7 +410,7 @@ Etter at lokal MVP fungerer stabilt:
 -   [x] Test varsler over flere dager (daglig gjentakelse bekreftet på fysisk iPhone over to dager)
 -   [x] Samle tilbakemeldinger (TestFlight-feedback sendt fra fysisk iPhone og mottatt i App Store Connect)
 -   [x] Rett krasj og kritiske problemer (ingen krasj registrert i TestFlight etter intern test)
--   [ ] External Testing når appen er stabil (1.0.1 build 2 sendt til Beta App Review 27.09.2026)
+-   [x] External Testing når appen er stabil (1.0.1 build 2 godkjent og ekstern invitasjon bekreftet 29.09.2026)
 
 ------------------------------------------------------------------------
 
@@ -422,9 +422,9 @@ Etter at lokal MVP fungerer stabilt:
 -   [x] App Description
 -   [x] Keywords
 -   [ ] Screenshots
--   [ ] Privacy Policy URL
--   [ ] Support URL
--   [ ] App Privacy
+-   [x] Privacy Policy URL
+-   [x] Support URL
+-   [x] App Privacy
 -   [x] Age Rating
 -   [ ] Pris / abonnement
 -   [ ] Subscription metadata hvis aktuelt

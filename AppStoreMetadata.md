@@ -58,6 +58,47 @@ Suggested review flow:
 
 ## URLs To Provide In App Store Connect
 
-Privacy Policy URL: TBD
+Privacy Policy URL: https://terjemoe1954.github.io/app-page/spendly/privacy/
 
-Support URL: TBD
+Support URL: https://terjemoe1954.github.io/app-page/spendly/support/
+
+## App Privacy
+
+Data Collection: No, we do not collect data from this app.
+
+Rationale for version 1.0:
+- Financial profile, expenses, transactions, savings goals, and budget snapshots are stored locally with SwiftData.
+- The AI backend is not configured; AI questions and budget summaries are not transmitted.
+- iCloud/CloudKit sync is not enabled.
+- The app contains no analytics, advertising, or tracking SDKs.
+- Purchases and entitlement checks are handled by Apple through StoreKit 2.
+
+## Subscription
+
+Subscription Group Reference Name: Spendly AI Plus
+
+Product Reference Name: Spendly AI Plus Monthly
+
+Product ID: spendlyai.plus.monthly
+
+Duration: 1 month
+
+Base Price: NOK 29 per month
+
+### English (U.S.)
+
+Display Name: Spendly AI Plus
+
+Description: Unlock additional savings goals and support the continued development of Spendly AI.
+
+### Norwegian Bokmål
+
+Display Name: Spendly AI Plus
+
+Description: Lås opp flere sparemål og støtt videreutviklingen av Spendly AI.
+
+### Thai
+
+Display Name: Spendly AI Plus
+
+Description: ปลดล็อกเป้าหมายการออมเพิ่มเติมและสนับสนุนการพัฒนา Spendly AI อย่างต่อเนื่อง
