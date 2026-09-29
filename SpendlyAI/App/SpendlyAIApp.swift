@@ -1,6 +1,6 @@
 //
-//  SpendlyAIApp.swift
-//  SpendlyAI
+// SpendlyAIApp.swift
+// SpendlyAI
 //
 
 import SwiftData
