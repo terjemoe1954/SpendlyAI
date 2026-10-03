@@ -90,12 +90,6 @@ struct SettingsView: View {
             }
 
             NavigationLink {
-                iCloudSyncReadinessView()
-            } label: {
-                Label("settings.iCloudSync", systemImage: "icloud")
-            }
-
-            NavigationLink {
                 PrivacyAndSupportView()
             } label: {
                 Label("settings.privacyAndSupport", systemImage: "lock.shield")
