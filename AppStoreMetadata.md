@@ -18,8 +18,12 @@ The app is built for manual budgeting without bank connections. Your core financ
 
 Key features:
 - Daily safe-to-spend amount
-- Quick purchase logging
-- Fixed expenses and savings goals
+- Purchases and income with due dates and payment status
+- Recurring fixed expenses with categories and intervals
+- Savings goals and planned saving
+- PDF reports, CSV export, printing, and sharing
+- Versioned backup and restore through Apple's document picker
+- Localized currency amounts with decimal precision
 - Friendly budget explanations
 - Local fallback when AI access is unavailable
 - English, Norwegian, and Thai language support
@@ -52,9 +56,11 @@ No special demo account is required.
 Suggested review flow:
 1. Complete onboarding with a monthly income, next payday, minimum buffer, and one savings goal.
 2. Open Home to see the calculated safe-to-spend amount.
-3. Add a purchase and confirm the daily amount updates.
-4. Open AI and ask a budget question.
-5. Open Settings to review privacy/support information and notification settings.
+3. Add a purchase and an income from Transactions, then change their payment/receipt status.
+4. Open Upcoming fixed expenses from Home and review category, interval, due date, and status.
+5. Open Reports in Settings, choose a period, preview the PDF, and export PDF or CSV.
+6. Open Backup and restore in Settings to export a backup and inspect an imported file before confirming restore.
+7. Open AI and ask a budget question.
 
 ## URLs To Provide In App Store Connect
 
@@ -66,14 +72,17 @@ Support URL: https://terjemoe1954.github.io/app-page/spendly/support/
 
 Data Collection: No, we do not collect data from this app.
 
-Rationale for version 1.0:
+Rationale for version 1.1:
 - Financial profile, expenses, transactions, savings goals, and budget snapshots are stored locally with SwiftData.
+- Backups and reports are created only when the user requests them and are shared or saved through Apple's system interfaces.
 - The AI backend is not configured; AI questions and budget summaries are not transmitted.
 - iCloud/CloudKit sync is not enabled.
 - The app contains no analytics, advertising, or tracking SDKs.
 - Purchases and entitlement checks are handled by Apple through StoreKit 2.
 
 ## Subscription
+
+The subscription is retained for existing customers but is removed from sale. Version 1.1 does not offer a new subscription purchase.
 
 Subscription Group Reference Name: Spendly AI Plus
 

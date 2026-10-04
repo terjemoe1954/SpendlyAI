@@ -7,12 +7,14 @@ import SwiftData
 import SwiftUI
 
 struct GoalsView: View {
+    @Environment(\.locale) private var locale
     @Environment(\.modelContext) private var modelContext
 
     @Query private var profiles: [UserFinancialProfile]
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var goals: [SavingsGoal]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
 
     @State private var showsNewGoal = false
     @State private var editingGoal: SavingsGoal?
@@ -52,7 +54,8 @@ struct GoalsView: View {
             profile: profile,
             fixedExpenses: fixedExpenses,
             savingsGoals: activeGoals,
-            transactions: transactions
+            transactions: transactions,
+            incomes: incomes
         )
         return budgetService.calculateBudget(for: input)
     }
@@ -176,11 +179,11 @@ struct GoalsView: View {
     }
 
     private func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? amount.description
+        MoneyFormatter.string(
+            from: amount,
+            currencyCode: currencyCode,
+            locale: locale
+        )
     }
 }
 
@@ -260,6 +263,8 @@ private struct GoalRowView: View {
 }
 
 private struct GoalMetricGrid: View {
+    @Environment(\.locale) private var locale
+
     let plan: GoalPlan
     let currencyCode: String
 
@@ -293,11 +298,11 @@ private struct GoalMetricGrid: View {
     }
 
     private func formattedCurrency(_ amount: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? amount.description
+        MoneyFormatter.string(
+            from: amount,
+            currencyCode: currencyCode,
+            locale: locale
+        )
     }
 }
 

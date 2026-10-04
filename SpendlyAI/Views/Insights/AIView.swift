@@ -11,6 +11,7 @@ struct AIView: View {
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
 
     @State private var viewModel = AIViewModel()
     @FocusState private var isQuestionFocused: Bool
@@ -23,7 +24,8 @@ struct AIView: View {
             profile: profile,
             fixedExpenses: fixedExpenses,
             savingsGoals: savingsGoals,
-            transactions: transactions
+            transactions: transactions,
+            incomes: incomes
         )
         let result = budgetService.calculateBudget(for: input)
 

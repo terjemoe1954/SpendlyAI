@@ -168,7 +168,7 @@ Lag en egen `BudgetService` som beregner tallene uten AI.
 -   [x] Beregn dagens anbefalte maksimum
 -   [x] Oppdater etter hvert kjøp
 -   [x] Håndter negative budsjetter
--   [ ] Håndter uregelmessig inntekt senere
+-   [x] Håndter uregelmessig inntekt senere
 -   [x] Unit tests for alle viktige beregninger
 
 ### Grunnprinsipp
@@ -467,6 +467,9 @@ avbryt den pågående App Review-innsendingen for å ta med disse endringene.
 -   [x] Forklar formelen bak «kan bruke i dag»
 -   [x] Forklar minimumsbuffer, faste utgifter og sparemål
 -   [x] Forklar registrering, redigering og sletting av transaksjoner
+-   [x] Forklar inntekter, gjentakelse og statusene `Venter` / `Mottatt`
+-   [x] Forklar administrasjon, forfallsdato, intervall og betalingsstatus for faste utgifter
+-   [x] Forklar rapportoversikt, PDF-forhåndsvisning og CSV-eksport
 -   [x] Forklar backup og gjenoppretting
 -   [x] Legg til korte svar på vanlige spørsmål
 -   [x] Lokaliser veiledningen til norsk, engelsk og thai
@@ -487,49 +490,61 @@ avbryt den pågående App Review-innsendingen for å ta med disse endringene.
 
 ### Inntekter og økonomisk aktivitet
 
--   [ ] La brukeren registrere inntekter i tillegg til utgifter
--   [ ] Skill tydelig mellom inntekt og utgift i datamodell og brukergrensesnitt
--   [ ] Støtt engangsinntekt og gjentakende inntekt
--   [ ] La inntekt få dato, beløp, kategori, beskrivelse og notat
--   [ ] Vis inntekter og utgifter samlet i en skalerbar aktivitetsoversikt
--   [ ] Støtt filtrering på inntekter, utgifter og faste utgifter
--   [ ] Oppdater Budget Engine når inntekter registreres eller endres
--   [ ] Unngå dobbelttelling mellom forventet lønn og registrerte inntekter
--   [ ] Test uregelmessig inntekt, flere inntekter og inntekt midt i budsjettperioden
+-   [x] La brukeren registrere inntekter i tillegg til utgifter
+-   [x] Skill tydelig mellom inntekt og utgift i datamodell og brukergrensesnitt
+-   [x] Støtt engangsinntekt og gjentakende inntekt
+-   [x] La inntekt få dato, beløp, kategori, beskrivelse og notat
+-   [x] Vis inntekter og utgifter samlet i en skalerbar aktivitetsoversikt
+-   [x] Støtt filtrering på inntekter, utgifter og faste utgifter
+-   [x] Oppdater Budget Engine når inntekter registreres eller endres
+-   [x] Unngå dobbelttelling mellom forventet lønn og registrerte inntekter
+-   [x] Test uregelmessig inntekt, flere inntekter og inntekt midt i budsjettperioden
+
+### Betalingsstatus og datoer
+
+-   [x] Legg til forfallsdato på kjøp, inntekter og faste utgifter
+-   [x] Legg til betalt dato på utgifter og mottatt dato på inntekter
+-   [x] Støtt statusene `Venter`, `Trukket`, `Betalt` / `Mottatt` og `Forfalt`
+-   [x] Beregn `Forfalt` automatisk når en ventende post passerer forfallsdatoen
+-   [x] Vis status i oversiktene og la den endres i redigeringsskjemaene
+-   [x] Bruk tydelige statusfarger: grønn for betalt/mottatt, oransje for trukket, rød for forfalt og grå for venter
+-   [x] Bevar datoer og status i backup og gjenoppretting
+-   [x] Behandle eldre poster og eldre backupfiler som allerede oppgjort
+-   [x] Test automatisk forfall og at oppgjorte poster ikke blir markert som forfalt
 
 ### Kategorier
 
--   [ ] Legg til kategorien `Pengespill` / `Gambling`
--   [ ] Gjør kategorien tilgjengelig for relevante utgifter og transaksjoner
--   [ ] Hold pengespill adskilt fra underholdning i summer og fremtidige rapporter
--   [ ] Lokaliser kategorien til norsk, engelsk og thai
+-   [x] Legg til kategorien `Pengespill` / `Gambling`
+-   [x] Gjør kategorien tilgjengelig for relevante utgifter og transaksjoner
+-   [x] Hold pengespill adskilt fra underholdning i summer og fremtidige rapporter
+-   [x] Lokaliser kategorien til norsk, engelsk og thai
 
 ### Beløpsformat og desimaler
 
--   [ ] Vis pengebeløp med to desimaler i hele appen
--   [ ] Bruk lokal desimalskilletegn og tusenskilletegn, for eksempel `1 812,50 kr` på norsk
--   [ ] Behold full Decimal-presisjon i beregninger og unngå Double for pengebeløp
--   [ ] Tillat registrering av beløp med både komma og punktum som desimalskilletegn
--   [ ] Bruk samme valutaformat på dashboard, transaksjoner, mål, faste utgifter, inntekter, backup og rapporter
--   [ ] Test avrunding, nullbeløp, negative beløp og store beløp
+-   [x] Vis pengebeløp med to desimaler i hele appen
+-   [x] Bruk lokal desimalskilletegn og tusenskilletegn, for eksempel `1 812,50 kr` på norsk
+-   [x] Behold full Decimal-presisjon i beregninger og unngå Double for pengebeløp
+-   [x] Tillat registrering av beløp med både komma og punktum som desimalskilletegn
+-   [x] Bruk samme valutaformat på dashboard, transaksjoner, mål, faste utgifter, inntekter, backup og rapporter
+-   [x] Test avrunding, nullbeløp, negative beløp og store beløp
 
 ### Rapporter, eksport og utskrift
 
--   [ ] Lag en egen rapportvisning basert på brukerens faktiske data
--   [ ] La brukeren velge datoperiode
--   [ ] Oppsummer inntekter, variable utgifter, faste utgifter, sparing og nettoresultat
--   [ ] Vis summer per kategori, inkludert `Pengespill`
--   [ ] Lag PDF-rapport med appnavn, periode, valuta og genereringsdato
--   [ ] Vis forhåndsvisning før eksport eller utskrift
--   [ ] Støtt Apples deleark for lagring, sending og utskrift
--   [ ] Støtt CSV-eksport av transaksjoner og inntekter
--   [ ] Sørg for at rapporter ikke inneholder mer persondata enn nødvendig
--   [ ] Test tom periode, store datasett, flere valutaer og sideskift i PDF
--   [ ] Lokaliser rapportoverskrifter til norsk, engelsk og thai
+-   [x] Lag en egen rapportvisning basert på brukerens faktiske data
+-   [x] La brukeren velge datoperiode
+-   [x] Oppsummer inntekter, variable utgifter, faste utgifter, sparing og nettoresultat
+-   [x] Vis summer per kategori, inkludert `Pengespill`
+-   [x] Lag PDF-rapport med appnavn, periode, valuta og genereringsdato
+-   [x] Vis forhåndsvisning før eksport eller utskrift
+-   [x] Støtt Apples deleark for lagring, sending og utskrift
+-   [x] Støtt CSV-eksport av transaksjoner og inntekter
+-   [x] Sørg for at rapporter ikke inneholder mer persondata enn nødvendig
+-   [x] Test tom periode, store datasett, flere valutaer og sideskift i PDF
+-   [x] Lokaliser rapportoverskrifter til norsk, engelsk og thai
 
 ### Generell brukeropplevelse
 
--   [ ] Vis en tydelig bekreftelse etter at økonomiprofilen er lagret
+-   [x] Vis en tydelig bekreftelse etter at økonomiprofilen er lagret
 
 ### Release-opprydding gjennomført i 1.0.2
 

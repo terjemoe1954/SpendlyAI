@@ -19,6 +19,7 @@ struct FinancialProfileSettingsView: View {
     @State private var savingsGoalAmount = ""
     @State private var savingsGoalDate = Calendar.current.date(byAdding: .month, value: 3, to: .now) ?? .now
     @State private var didLoadProfile = false
+    @State private var saveAlert: SaveAlert?
 
     private let currencyCodes = ["NOK", "USD", "EUR", "THB"]
 
@@ -43,6 +44,22 @@ struct FinancialProfileSettingsView: View {
         }
         .task {
             loadProfileIfNeeded()
+        }
+        .alert(item: $saveAlert) { alert in
+            switch alert {
+            case .success:
+                Alert(
+                    title: Text("settings.profile.saved.title"),
+                    message: Text("settings.profile.saved.message"),
+                    dismissButton: .default(Text("common.ok"))
+                )
+            case .failure(let message):
+                Alert(
+                    title: Text("settings.profile.saveError.title"),
+                    message: Text(message),
+                    dismissButton: .default(Text("common.ok"))
+                )
+            }
         }
     }
 
@@ -132,11 +149,31 @@ struct FinancialProfileSettingsView: View {
                 priority: .medium
             ))
         }
+
+        do {
+            try modelContext.save()
+            saveAlert = .success
+        } catch {
+            saveAlert = .failure(error.localizedDescription)
+        }
     }
 
     private func decimalValue(from text: String) -> Decimal? {
-        let normalizedText = text.replacingOccurrences(of: ",", with: ".")
-        return Decimal(string: normalizedText)
+        MoneyParser.decimal(from: text)
+    }
+
+    private enum SaveAlert: Identifiable {
+        case success
+        case failure(String)
+
+        var id: String {
+            switch self {
+            case .success:
+                "success"
+            case .failure:
+                "failure"
+            }
+        }
     }
 }
 

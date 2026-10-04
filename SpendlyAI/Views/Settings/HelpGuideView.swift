@@ -29,6 +29,24 @@ struct HelpGuideView: View {
                     topic: .transactions
                 )
                 HelpNavigationRow(
+                    titleKey: "help.incomes.title",
+                    subtitleKey: "help.incomes.subtitle",
+                    systemImage: "banknote",
+                    topic: .incomes
+                )
+                HelpNavigationRow(
+                    titleKey: "help.fixedExpenses.title",
+                    subtitleKey: "help.fixedExpenses.subtitle",
+                    systemImage: "calendar.badge.exclamationmark",
+                    topic: .fixedExpenses
+                )
+                HelpNavigationRow(
+                    titleKey: "help.reports.title",
+                    subtitleKey: "help.reports.subtitle",
+                    systemImage: "doc.text.magnifyingglass",
+                    topic: .reports
+                )
+                HelpNavigationRow(
                     titleKey: "help.backup.title",
                     subtitleKey: "help.backup.subtitle",
                     systemImage: "externaldrive",
@@ -95,6 +113,9 @@ private enum HelpTopic: String, Hashable {
     case dailyBudget
     case planning
     case transactions
+    case incomes
+    case fixedExpenses
+    case reports
     case backup
     case faq
 
@@ -104,6 +125,9 @@ private enum HelpTopic: String, Hashable {
         case .dailyBudget: "help.dailyBudget.title"
         case .planning: "help.planning.title"
         case .transactions: "help.transactions.title"
+        case .incomes: "help.incomes.title"
+        case .fixedExpenses: "help.fixedExpenses.title"
+        case .reports: "help.reports.title"
         case .backup: "help.backup.title"
         case .faq: "help.faq.title"
         }
@@ -132,6 +156,21 @@ private enum HelpTopic: String, Hashable {
                 HelpSection(titleKey: "help.transactions.add.title", bodyKey: "help.transactions.add.body"),
                 HelpSection(titleKey: "help.transactions.edit.title", bodyKey: "help.transactions.edit.body")
             ]
+        case .incomes:
+            [
+                HelpSection(titleKey: "help.incomes.add.title", bodyKey: "help.incomes.add.body"),
+                HelpSection(titleKey: "help.incomes.status.title", bodyKey: "help.incomes.status.body")
+            ]
+        case .fixedExpenses:
+            [
+                HelpSection(titleKey: "help.fixedExpenses.manage.title", bodyKey: "help.fixedExpenses.manage.body"),
+                HelpSection(titleKey: "help.fixedExpenses.status.title", bodyKey: "help.fixedExpenses.status.body")
+            ]
+        case .reports:
+            [
+                HelpSection(titleKey: "help.reports.summary.title", bodyKey: "help.reports.summary.body"),
+                HelpSection(titleKey: "help.reports.export.title", bodyKey: "help.reports.export.body")
+            ]
         case .backup:
             [
                 HelpSection(titleKey: "help.backup.export.title", bodyKey: "help.backup.export.body"),
@@ -159,6 +198,7 @@ private struct HelpSection: Identifiable {
         id = title
     }
 }
+
 
 #Preview {
     NavigationStack {

@@ -210,10 +210,18 @@ extension BudgetService {
         profile: UserFinancialProfile,
         fixedExpenses: [FixedExpense],
         savingsGoals: [SavingsGoal],
-        transactions: [Transaction]
+        transactions: [Transaction],
+        incomes: [Income] = [],
+        today: Date = .now
     ) -> BudgetInput {
-        BudgetInput(
-            availableMoney: profile.monthlyNetIncome,
+        let additionalIncome = sumRealizedAdditionalIncome(
+            incomes,
+            from: profile.budgetPeriodStart,
+            through: min(today, profile.budgetPeriodEnd)
+        )
+
+        return BudgetInput(
+            availableMoney: profile.monthlyNetIncome + additionalIncome,
             periodStart: profile.budgetPeriodStart,
             nextIncomeDate: profile.budgetPeriodEnd,
             fixedExpenses: fixedExpenses.map { expense in
@@ -236,5 +244,65 @@ extension BudgetService {
             },
             minimumBuffer: profile.minimumBuffer
         )
+    }
+
+    private func sumRealizedAdditionalIncome(
+        _ incomes: [Income],
+        from periodStart: Date,
+        through endDate: Date
+    ) -> Decimal {
+        let normalizedPeriodStart = calendar.startOfDay(for: periodStart)
+        let normalizedEndDate = calendar.startOfDay(for: endDate)
+        guard normalizedEndDate >= normalizedPeriodStart else { return 0 }
+
+        return incomes.reduce(0) { total, income in
+            guard income.isActive, income.category != .salary else { return total }
+            let normalizedIncomeDate = calendar.startOfDay(for: income.date)
+
+            if income.recurrence == .oneTime {
+                guard normalizedIncomeDate >= normalizedPeriodStart,
+                      normalizedIncomeDate <= normalizedEndDate else {
+                    return total
+                }
+                return total + income.amount
+            }
+
+            var occurrence = normalizedIncomeDate
+            while occurrence < normalizedPeriodStart {
+                guard let next = nextIncomeDate(after: occurrence, recurrence: income.recurrence),
+                      next > occurrence else {
+                    return total
+                }
+                occurrence = next
+            }
+
+            var incomeTotal: Decimal = 0
+            while occurrence <= normalizedEndDate {
+                incomeTotal += income.amount
+                guard let next = nextIncomeDate(after: occurrence, recurrence: income.recurrence),
+                      next > occurrence else {
+                    break
+                }
+                occurrence = next
+            }
+            return total + incomeTotal
+        }
+    }
+
+    private func nextIncomeDate(after date: Date, recurrence: IncomeRecurrence) -> Date? {
+        switch recurrence {
+        case .oneTime:
+            return nil
+        case .weekly:
+            return calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly:
+            return calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly:
+            return calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly:
+            return calendar.date(byAdding: .month, value: 3, to: date)
+        case .yearly:
+            return calendar.date(byAdding: .year, value: 1, to: date)
+        }
     }
 }

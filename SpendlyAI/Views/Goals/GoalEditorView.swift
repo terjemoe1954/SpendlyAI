@@ -100,8 +100,7 @@ struct GoalEditorView: View {
     }
 
     private func decimalValue(from text: String) -> Decimal? {
-        let normalizedText = text.replacingOccurrences(of: ",", with: ".")
-        return Decimal(string: normalizedText)
+        MoneyParser.decimal(from: text)
     }
 }
 

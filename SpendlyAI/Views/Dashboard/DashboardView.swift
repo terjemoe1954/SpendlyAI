@@ -11,6 +11,7 @@ struct DashboardView: View {
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
 
     @State private var showsNewTransaction = false
 
@@ -27,7 +28,8 @@ struct DashboardView: View {
             profile: profile,
             fixedExpenses: fixedExpenses,
             savingsGoals: savingsGoals,
-            transactions: transactions
+            transactions: transactions,
+            incomes: incomes
         )
         return budgetService.calculateBudget(for: input)
     }
@@ -259,11 +261,7 @@ struct DashboardView: View {
     }
 
     private func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? amount.description
+        MoneyFormatter.string(from: amount, currencyCode: currencyCode)
     }
 
     private func savingsProgress(for goal: SavingsGoal) -> Double {

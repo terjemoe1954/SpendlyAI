@@ -10,6 +10,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
     let createdAt: Date
     let profile: ProfileRecord?
     let transactions: [TransactionRecord]
+    let incomes: [IncomeRecord]
     let fixedExpenses: [FixedExpenseRecord]
     let savingsGoals: [SavingsGoalRecord]
 
@@ -31,6 +32,65 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let transactionDescription: String
         let isEssential: Bool
         let notes: String?
+        let dueDate: Date?
+        let settledDate: Date?
+        let paymentStatus: PaymentStatus?
+    }
+
+    struct IncomeRecord: Codable, Equatable, Sendable {
+        let amount: String
+        let date: Date
+        let category: IncomeCategory
+        let incomeDescription: String
+        let notes: String?
+        let recurrence: IncomeRecurrence
+        let isActive: Bool
+        let dueDate: Date?
+        let settledDate: Date?
+        let paymentStatus: PaymentStatus?
+
+        init(
+            amount: String,
+            date: Date,
+            category: IncomeCategory,
+            incomeDescription: String,
+            notes: String?,
+            recurrence: IncomeRecurrence = .oneTime,
+            isActive: Bool = true,
+            dueDate: Date? = nil,
+            settledDate: Date? = nil,
+            paymentStatus: PaymentStatus? = nil
+        ) {
+            self.amount = amount
+            self.date = date
+            self.category = category
+            self.incomeDescription = incomeDescription
+            self.notes = notes
+            self.recurrence = recurrence
+            self.isActive = isActive
+            self.dueDate = dueDate
+            self.settledDate = settledDate
+            self.paymentStatus = paymentStatus
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case amount, date, category, incomeDescription, notes, recurrence, isActive
+            case dueDate, settledDate, paymentStatus
+        }
+
+        init(from decoder: any Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            amount = try container.decode(String.self, forKey: .amount)
+            date = try container.decode(Date.self, forKey: .date)
+            category = try container.decode(IncomeCategory.self, forKey: .category)
+            incomeDescription = try container.decode(String.self, forKey: .incomeDescription)
+            notes = try container.decodeIfPresent(String.self, forKey: .notes)
+            recurrence = try container.decodeIfPresent(IncomeRecurrence.self, forKey: .recurrence) ?? .oneTime
+            isActive = try container.decodeIfPresent(Bool.self, forKey: .isActive) ?? true
+            dueDate = try container.decodeIfPresent(Date.self, forKey: .dueDate)
+            settledDate = try container.decodeIfPresent(Date.self, forKey: .settledDate)
+            paymentStatus = try container.decodeIfPresent(PaymentStatus.self, forKey: .paymentStatus)
+        }
     }
 
     struct FixedExpenseRecord: Codable, Equatable, Sendable {
@@ -40,6 +100,9 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let category: ExpenseCategory
         let recurrence: ExpenseRecurrence
         let isActive: Bool
+        let dueDate: Date?
+        let settledDate: Date?
+        let paymentStatus: PaymentStatus?
     }
 
     struct SavingsGoalRecord: Codable, Equatable, Sendable {
@@ -51,12 +114,46 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let isCompleted: Bool
     }
 
+    init(
+        formatVersion: Int,
+        createdAt: Date,
+        profile: ProfileRecord?,
+        transactions: [TransactionRecord],
+        incomes: [IncomeRecord] = [],
+        fixedExpenses: [FixedExpenseRecord],
+        savingsGoals: [SavingsGoalRecord]
+    ) {
+        self.formatVersion = formatVersion
+        self.createdAt = createdAt
+        self.profile = profile
+        self.transactions = transactions
+        self.incomes = incomes
+        self.fixedExpenses = fixedExpenses
+        self.savingsGoals = savingsGoals
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case formatVersion, createdAt, profile, transactions, incomes, fixedExpenses, savingsGoals
+    }
+
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        formatVersion = try container.decode(Int.self, forKey: .formatVersion)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        profile = try container.decodeIfPresent(ProfileRecord.self, forKey: .profile)
+        transactions = try container.decode([TransactionRecord].self, forKey: .transactions)
+        incomes = try container.decodeIfPresent([IncomeRecord].self, forKey: .incomes) ?? []
+        fixedExpenses = try container.decode([FixedExpenseRecord].self, forKey: .fixedExpenses)
+        savingsGoals = try container.decode([SavingsGoalRecord].self, forKey: .savingsGoals)
+    }
+
     var summary: BackupSummary {
         BackupSummary(
             createdAt: createdAt,
             formatVersion: formatVersion,
             profileCount: profile == nil ? 0 : 1,
             transactionCount: transactions.count,
+            incomeCount: incomes.count,
             fixedExpenseCount: fixedExpenses.count,
             savingsGoalCount: savingsGoals.count
         )
@@ -68,8 +165,27 @@ struct BackupSummary: Equatable, Sendable {
     let formatVersion: Int
     let profileCount: Int
     let transactionCount: Int
+    let incomeCount: Int
     let fixedExpenseCount: Int
     let savingsGoalCount: Int
+
+    init(
+        createdAt: Date,
+        formatVersion: Int,
+        profileCount: Int,
+        transactionCount: Int,
+        incomeCount: Int = 0,
+        fixedExpenseCount: Int,
+        savingsGoalCount: Int
+    ) {
+        self.createdAt = createdAt
+        self.formatVersion = formatVersion
+        self.profileCount = profileCount
+        self.transactionCount = transactionCount
+        self.incomeCount = incomeCount
+        self.fixedExpenseCount = fixedExpenseCount
+        self.savingsGoalCount = savingsGoalCount
+    }
 }
 
 enum BackupError: Error, Equatable {
@@ -84,6 +200,7 @@ struct BackupService {
     func makeBackup(
         profile: UserFinancialProfile?,
         transactions: [Transaction],
+        incomes: [Income] = [],
         fixedExpenses: [FixedExpense],
         savingsGoals: [SavingsGoal],
         createdAt: Date = .now
@@ -110,7 +227,24 @@ struct BackupService {
                     category: $0.category,
                     transactionDescription: $0.transactionDescription,
                     isEssential: $0.isEssential,
-                    notes: $0.notes
+                    notes: $0.notes,
+                    dueDate: $0.dueDate,
+                    settledDate: $0.settledDate,
+                    paymentStatus: $0.paymentStatus
+                )
+            },
+            incomes: incomes.map {
+                .init(
+                    amount: decimalString($0.amount),
+                    date: $0.date,
+                    category: $0.category,
+                    incomeDescription: $0.incomeDescription,
+                    notes: $0.notes,
+                    recurrence: $0.recurrence,
+                    isActive: $0.isActive,
+                    dueDate: $0.dueDate,
+                    settledDate: $0.settledDate,
+                    paymentStatus: $0.paymentStatus
                 )
             },
             fixedExpenses: fixedExpenses.map {
@@ -120,7 +254,10 @@ struct BackupService {
                     dueDay: $0.dueDay,
                     category: $0.category,
                     recurrence: $0.recurrence,
-                    isActive: $0.isActive
+                    isActive: $0.isActive,
+                    dueDate: $0.dueDate,
+                    settledDate: $0.settledDate,
+                    paymentStatus: $0.paymentStatus
                 )
             },
             savingsGoals: savingsGoals.map {
@@ -175,6 +312,7 @@ struct BackupService {
             try modelContext.transaction {
                 try modelContext.delete(model: UserFinancialProfile.self)
                 try modelContext.delete(model: Transaction.self)
+                try modelContext.delete(model: Income.self)
                 try modelContext.delete(model: FixedExpense.self)
                 try modelContext.delete(model: SavingsGoal.self)
 
@@ -198,7 +336,25 @@ struct BackupService {
                         category: item.category,
                         transactionDescription: item.transactionDescription,
                         isEssential: item.isEssential,
-                        notes: item.notes
+                        notes: item.notes,
+                        dueDate: item.dueDate,
+                        settledDate: item.settledDate,
+                        paymentStatus: item.paymentStatus ?? .settled
+                    ))
+                }
+
+                for item in backup.incomes {
+                    modelContext.insert(Income(
+                        amount: decimal(item.amount)!,
+                        date: item.date,
+                        category: item.category,
+                        incomeDescription: item.incomeDescription,
+                        notes: item.notes,
+                        recurrence: item.recurrence,
+                        isActive: item.isActive,
+                        dueDate: item.dueDate,
+                        settledDate: item.settledDate,
+                        paymentStatus: item.paymentStatus ?? .settled
                     ))
                 }
 
@@ -209,7 +365,10 @@ struct BackupService {
                         dueDay: item.dueDay,
                         category: item.category,
                         recurrence: item.recurrence,
-                        isActive: item.isActive
+                        isActive: item.isActive,
+                        dueDate: item.dueDate,
+                        settledDate: item.settledDate,
+                        paymentStatus: item.paymentStatus ?? .settled
                     ))
                 }
 
@@ -244,6 +403,10 @@ struct BackupService {
             decimal($0.amount) != nil
         }
 
+        let incomesAreValid = backup.incomes.allSatisfy {
+            decimal($0.amount) != nil
+        }
+
         let expensesAreValid = backup.fixedExpenses.allSatisfy {
             decimal($0.amount) != nil
         }
@@ -253,7 +416,7 @@ struct BackupService {
                 && decimal($0.savedAmount) != nil
         }
 
-        return profileIsValid && transactionsAreValid && expensesAreValid && goalsAreValid
+        return profileIsValid && transactionsAreValid && incomesAreValid && expensesAreValid && goalsAreValid
     }
 
     private func decimalString(_ value: Decimal) -> String {

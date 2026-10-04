@@ -65,11 +65,10 @@ struct DailyInsightService {
     }
 
     private func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.locale = locale
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? amount.description
+        MoneyFormatter.string(
+            from: amount,
+            currencyCode: currencyCode,
+            locale: locale
+        )
     }
 }

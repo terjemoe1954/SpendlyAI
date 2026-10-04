@@ -1,8 +1,3 @@
-//
-//  FixedExpense.swift
-//  SpendlyAI
-//
-
 import Foundation
 import SwiftData
 
@@ -14,6 +9,18 @@ final class FixedExpense {
     var category: ExpenseCategory
     var recurrence: ExpenseRecurrence
     var isActive: Bool
+    var dueDate: Date?
+    var settledDate: Date?
+    var paymentStatusRawValue: String?
+
+    var paymentStatus: PaymentStatus {
+        get { paymentStatusRawValue.flatMap(PaymentStatus.init(rawValue:)) ?? .settled }
+        set { paymentStatusRawValue = newValue.rawValue }
+    }
+
+    func effectivePaymentStatus(now: Date = .now, calendar: Calendar = .current) -> PaymentStatus {
+        paymentStatus.effectiveStatus(dueDate: dueDate, now: now, calendar: calendar)
+    }
 
     init(
         name: String,
@@ -21,7 +28,10 @@ final class FixedExpense {
         dueDay: Int,
         category: ExpenseCategory = .other,
         recurrence: ExpenseRecurrence = .monthly,
-        isActive: Bool = true
+        isActive: Bool = true,
+        dueDate: Date? = nil,
+        settledDate: Date? = nil,
+        paymentStatus: PaymentStatus = .pending
     ) {
         self.name = name
         self.amount = amount
@@ -29,5 +39,8 @@ final class FixedExpense {
         self.category = category
         self.recurrence = recurrence
         self.isActive = isActive
+        self.dueDate = dueDate
+        self.settledDate = settledDate
+        self.paymentStatusRawValue = paymentStatus.rawValue
     }
 }

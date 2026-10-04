@@ -28,6 +28,7 @@ struct RootView: View {
             UserFinancialProfile.self,
             FixedExpense.self,
             Transaction.self,
+            Income.self,
             SavingsGoal.self,
             DailyBudgetSnapshot.self
         ], inMemory: true)

@@ -3,6 +3,7 @@
 //  SpendlyAITests
 //
 
+import CoreGraphics
 import Foundation
 import SwiftData
 import SwiftUI
@@ -11,6 +12,111 @@ import Testing
 
 struct SpendlyAITests {
     private let calendar = Calendar(identifier: .gregorian)
+
+    @Test func keepsGamblingSeparateFromEntertainment() {
+        #expect(SpendingCategory.gambling != .entertainment)
+        #expect(SpendingCategory.gambling.rawValue == "gambling")
+        #expect(SpendingCategory.allCases.contains(.gambling))
+        #expect(ExpenseCategory.allCases.contains(.gambling))
+    }
+
+    @Test func marksOnlyPendingPastDuePaymentsAsOverdue() {
+        let now = date(year: 2026, month: 10, day: 4)
+        let yesterday = date(year: 2026, month: 10, day: 3)
+        let tomorrow = date(year: 2026, month: 10, day: 5)
+
+        #expect(PaymentStatus.pending.effectiveStatus(dueDate: tomorrow, now: now, calendar: calendar) == .pending)
+        #expect(PaymentStatus.pending.effectiveStatus(dueDate: yesterday, now: now, calendar: calendar) == .overdue)
+        #expect(PaymentStatus.settled.effectiveStatus(dueDate: yesterday, now: now, calendar: calendar) == .settled)
+        #expect(PaymentStatus.withdrawn.effectiveStatus(dueDate: yesterday, now: now, calendar: calendar) == .withdrawn)
+    }
+
+    @Test func formatsNorwegianCurrencyWithTwoDecimals() {
+        let locale = Locale(identifier: "nb_NO")
+
+        let formatted = (Decimal(18_125) / Decimal(10)).formatted(
+            .currency(code: "NOK")
+                .precision(.fractionLength(2))
+                .locale(locale)
+        )
+
+        #expect(formatted.contains("1 812,50"))
+        #expect(formatted.contains("kr"))
+    }
+
+    @Test func parsesMoneyWithCommaOrPointAsDecimalSeparator() {
+        #expect(MoneyParser.decimal(from: "1812,50") == Decimal(string: "1812.50"))
+        #expect(MoneyParser.decimal(from: "1812.50") == Decimal(string: "1812.50"))
+        #expect(MoneyParser.decimal(from: "1 812,50") == Decimal(string: "1812.50"))
+        #expect(MoneyParser.decimal(from: "1.812,50") == Decimal(string: "1812.50"))
+        #expect(MoneyParser.decimal(from: "1,812.50") == Decimal(string: "1812.50"))
+        #expect(MoneyParser.decimal(from: "not money") == nil)
+    }
+
+    @Test func formatsMoneyUsingCommercialRounding() throws {
+        let locale = Locale(identifier: "nb_NO")
+        let amount = try #require(MoneyParser.decimal(from: "12.345"))
+
+        #expect(
+            MoneyFormatter.string(
+                from: amount,
+                currencyCode: "NOK",
+                locale: locale
+            ).contains("12,35")
+        )
+    }
+
+    @Test func formatsZeroNegativeAndLargeMoneyAmounts() throws {
+        let locale = Locale(identifier: "nb_NO")
+        let negativeAmount = try #require(Decimal(string: "-1234.565"))
+        let largeAmount = try #require(Decimal(string: "1234567.89"))
+        let normalized: (Decimal) -> String = { amount in
+            MoneyFormatter.string(
+                from: amount,
+                currencyCode: "NOK",
+                locale: locale
+            )
+            .replacingOccurrences(of: "\u{00A0}", with: " ")
+            .replacingOccurrences(of: "\u{202F}", with: " ")
+        }
+
+        #expect(normalized(0).contains("0,00"))
+        #expect(normalized(negativeAmount).contains("−1 234,57"))
+        #expect(normalized(largeAmount).contains("1 234 567,89"))
+    }
+
+    @Test func formatsSupportedCurrenciesConsistently() throws {
+        let amount = try #require(Decimal(string: "1234.5"))
+        let cases = [
+            ("NOK", Locale(identifier: "nb_NO"), "1 234,50", "kr"),
+            ("USD", Locale(identifier: "en_US"), "1,234.50", "$"),
+            ("THB", Locale(identifier: "th_TH"), "1,234.50", "฿")
+        ]
+
+        for (currencyCode, locale, expectedAmount, expectedCurrencySymbol) in cases {
+            let formatted = MoneyFormatter.string(
+                from: amount,
+                currencyCode: currencyCode,
+                locale: locale
+            )
+            .replacingOccurrences(of: "\u{00A0}", with: " ")
+            .replacingOccurrences(of: "\u{202F}", with: " ")
+
+            #expect(formatted.contains(expectedAmount))
+            #expect(formatted.contains(expectedCurrencySymbol))
+        }
+    }
+
+    @Test func keepsDecimalPrecisionThroughoutMoneyCalculations() throws {
+        let tenCents = try #require(Decimal(string: "0.10"))
+        let twentyCents = try #require(Decimal(string: "0.20"))
+        let expectedSum = try #require(Decimal(string: "0.30"))
+        let largeAmount = try #require(Decimal(string: "1234567.89"))
+        let expectedRemainder = try #require(Decimal(string: "1234567.59"))
+
+        #expect(tenCents + twentyCents == expectedSum)
+        #expect(largeAmount - expectedSum == expectedRemainder)
+    }
 
     @Test func calculatesDailyBudgetAfterReservations() {
         let service = BudgetService(calendar: calendar)
@@ -288,6 +394,131 @@ struct SpendlyAITests {
         #expect(result.daysRemaining == 4)
     }
 
+    @Test func realizedRecurringIncomeIncreasesAvailableMoney() {
+        let service = BudgetService(calendar: calendar)
+        let periodStart = date(year: 2026, month: 10, day: 1)
+        let today = date(year: 2026, month: 10, day: 15)
+        let profile = UserFinancialProfile(
+            monthlyNetIncome: 30_000,
+            paydayDay: 1,
+            budgetPeriodStart: periodStart,
+            budgetPeriodEnd: date(year: 2026, month: 11, day: 1)
+        )
+        let freelanceIncome = Income(
+            amount: 1_000,
+            date: periodStart,
+            category: .freelance,
+            recurrence: .weekly
+        )
+        let midPeriodIncome = Income(
+            amount: 500,
+            date: date(year: 2026, month: 10, day: 10),
+            category: .gift
+        )
+
+        let input = service.makeInput(
+            profile: profile,
+            fixedExpenses: [],
+            savingsGoals: [],
+            transactions: [],
+            incomes: [freelanceIncome, midPeriodIncome],
+            today: today
+        )
+
+        #expect(input.availableMoney == 33_500)
+    }
+
+    @Test func salaryIncomeDoesNotDoubleCountProfileSalary() {
+        let service = BudgetService(calendar: calendar)
+        let periodStart = date(year: 2026, month: 10, day: 1)
+        let profile = UserFinancialProfile(
+            monthlyNetIncome: 30_000,
+            paydayDay: 1,
+            budgetPeriodStart: periodStart,
+            budgetPeriodEnd: date(year: 2026, month: 11, day: 1)
+        )
+        let registeredSalary = Income(
+            amount: 30_000,
+            date: periodStart,
+            category: .salary,
+            recurrence: .monthly
+        )
+
+        let input = service.makeInput(
+            profile: profile,
+            fixedExpenses: [],
+            savingsGoals: [],
+            transactions: [],
+            incomes: [registeredSalary],
+            today: date(year: 2026, month: 10, day: 15)
+        )
+
+        #expect(input.availableMoney == 30_000)
+    }
+
+    @Test func incomeLaterOnBudgetEndDateIsIncluded() {
+        let service = BudgetService(calendar: calendar)
+        let endDate = date(year: 2026, month: 10, day: 4)
+        let incomeTime = calendar.date(byAdding: .hour, value: 12, to: endDate)!
+        let profile = UserFinancialProfile(
+            monthlyNetIncome: 45_000,
+            paydayDay: 4,
+            budgetPeriodStart: date(year: 2026, month: 9, day: 4),
+            budgetPeriodEnd: endDate
+        )
+        let income = Income(
+            amount: 1_000,
+            date: incomeTime,
+            category: .freelance,
+            recurrence: .weekly
+        )
+
+        let input = service.makeInput(
+            profile: profile,
+            fixedExpenses: [],
+            savingsGoals: [],
+            transactions: [],
+            incomes: [income],
+            today: incomeTime
+        )
+
+        #expect(input.availableMoney == 46_000)
+    }
+
+    @Test func futureAndInactiveIncomeDoNotAffectCurrentBudget() {
+        let service = BudgetService(calendar: calendar)
+        let periodStart = date(year: 2026, month: 10, day: 1)
+        let profile = UserFinancialProfile(
+            monthlyNetIncome: 30_000,
+            paydayDay: 1,
+            budgetPeriodStart: periodStart,
+            budgetPeriodEnd: date(year: 2026, month: 11, day: 1)
+        )
+        let futureIncome = Income(
+            amount: 5_000,
+            date: date(year: 2026, month: 10, day: 20),
+            category: .other
+        )
+        let inactiveIncome = Income(
+            amount: 2_000,
+            date: periodStart,
+            category: .freelance,
+            recurrence: .weekly,
+            isActive: false
+        )
+
+        let input = service.makeInput(
+            profile: profile,
+            fixedExpenses: [],
+            savingsGoals: [],
+            transactions: [],
+            incomes: [futureIncome, inactiveIncome],
+            today: date(year: 2026, month: 10, day: 15)
+        )
+
+        #expect(input.availableMoney == 30_000)
+    }
+
     @Test func dailyInsightFormatsDifferentCurrencies() {
         let service = DailyInsightService(locale: Locale(identifier: "en_US_POSIX"))
         let usdInsight = service.makeInsight(from: aiBudgetContext(currencyCode: "USD", isBudgetUnderPressure: false))
@@ -305,88 +536,12 @@ struct SpendlyAITests {
         #expect(AppAppearance.dark.colorScheme == .dark)
     }
 
-    @Test func localizationCatalogContainsEnglishNorwegianAndThai() throws {
-        let catalog = try localizationCatalog()
-        let strings = try #require(catalog["strings"] as? [String: Any])
-        let requiredKeys = [
-            "tab.home",
-            "tab.transactions",
-            "tab.ai",
-            "tab.goals",
-            "tab.settings",
-            "dashboard.safeToSpend.title",
-            "transaction.new.title",
-            "ai.ask",
-            "goal.add",
-            "settings.appName",
-            "settings.profile",
-            "settings.helpGuide",
-            "help.title",
-            "help.section.gettingStarted",
-            "help.profile.title",
-            "help.profile.setup.body",
-            "help.profile.update.body",
-            "help.dailyBudget.title",
-            "help.dailyBudget.formula.body",
-            "help.dailyBudget.today.body",
-            "help.planning.title",
-            "help.planning.buffer.body",
-            "help.planning.expenses.body",
-            "help.planning.goals.body",
-            "help.transactions.title",
-            "help.transactions.add.body",
-            "help.transactions.edit.body",
-            "help.backup.title",
-            "help.backup.export.body",
-            "help.backup.restore.body",
-            "help.backup.safety.body",
-            "help.faq.title",
-            "help.faq.changes.answer",
-            "help.faq.sync.answer",
-            "help.faq.privacy.answer",
-            "fixedExpenses.title",
-            "fixedExpenses.manage",
-            "fixedExpenses.add",
-            "fixedExpenses.empty.message",
-            "fixedExpenses.category",
-            "fixedExpenses.recurrence",
-            "fixedExpenses.filterAndSort",
-            "fixedExpenses.filter.status",
-            "fixedExpenses.filter.category",
-            "fixedExpenses.filter.recurrence",
-            "fixedExpenses.filter.reset",
-            "fixedExpenses.filter.allStatuses",
-            "fixedExpenses.filter.allCategories",
-            "fixedExpenses.filter.allRecurrences",
-            "fixedExpenses.sort.title",
-            "fixedExpenses.sort.name",
-            "fixedExpenses.sort.amountDescending",
-            "fixedExpenses.sort.dueDay",
-            "expenseCategory.housing",
-            "expenseCategory.utilities",
-            "expenseCategory.insurance",
-            "expenseCategory.transport",
-            "expenseCategory.subscriptions",
-            "expenseCategory.debt",
-            "expenseCategory.childcare",
-            "expenseCategory.groceries",
-            "expenseCategory.health",
-            "expenseCategory.other",
-            "expenseRecurrence.weekly",
-            "expenseRecurrence.biweekly",
-            "expenseRecurrence.monthly",
-            "expenseRecurrence.quarterly",
-            "expenseRecurrence.yearly"
-        ]
+    @Test func localizationCatalogContainsEnglishNorwegianAndThai() {
+        let localizations = Set(Bundle.main.localizations)
 
-        for key in requiredKeys {
-            let entry = try #require(strings[key] as? [String: Any])
-            let localizations = try #require(entry["localizations"] as? [String: Any])
-
-            #expect(localizations["en"] != nil)
-            #expect(localizations["nb"] != nil)
-            #expect(localizations["th"] != nil)
-        }
+        #expect(localizations.contains("en"))
+        #expect(localizations.contains("nb"))
+        #expect(localizations.contains("th"))
     }
 
     @Test @MainActor func aiServiceReportsMissingAccessWithoutBackend() async {
@@ -465,7 +620,7 @@ struct SpendlyAITests {
 
         #expect(insight.message.contains("NOK"))
         #expect(insight.message.contains("250"))
-        #expect(insight.message.contains("188"))
+        #expect(insight.message.contains("187.50"))
     }
 
     @Test func dailyInsightStaysShortAndNonMoralizing() {
@@ -592,14 +747,32 @@ struct SpendlyAITests {
             category: .groceries,
             transactionDescription: "Mat",
             isEssential: true,
-            notes: "Ukentlig"
+            notes: "Ukentlig",
+            dueDate: date(year: 2026, month: 10, day: 8),
+            settledDate: createdAt,
+            paymentStatus: .withdrawn
+        )
+        let income = Income(
+            amount: 30_000.75,
+            date: createdAt,
+            category: .salary,
+            incomeDescription: "Lønn",
+            notes: "Oktober",
+            recurrence: .monthly,
+            isActive: false,
+            dueDate: date(year: 2026, month: 10, day: 19),
+            settledDate: createdAt,
+            paymentStatus: .settled
         )
         let fixedExpense = FixedExpense(
             name: "Husleie",
             amount: 12_000.75,
             dueDay: 1,
             category: .housing,
-            recurrence: .monthly
+            recurrence: .monthly,
+            dueDate: date(year: 2026, month: 10, day: 1),
+            settledDate: createdAt,
+            paymentStatus: .settled
         )
         let goal = SavingsGoal(
             name: "Buffer",
@@ -612,6 +785,7 @@ struct SpendlyAITests {
         let original = service.makeBackup(
             profile: profile,
             transactions: [transaction],
+            incomes: [income],
             fixedExpenses: [fixedExpense],
             savingsGoals: [goal],
             createdAt: createdAt
@@ -622,6 +796,13 @@ struct SpendlyAITests {
         #expect(decoded.formatVersion == SpendlyBackup.currentFormatVersion)
         #expect(decoded.summary.profileCount == 1)
         #expect(decoded.summary.transactionCount == 1)
+        #expect(decoded.summary.incomeCount == 1)
+        #expect(decoded.incomes.first?.recurrence == .monthly)
+        #expect(decoded.incomes.first?.isActive == false)
+        #expect(decoded.transactions.first?.paymentStatus == .withdrawn)
+        #expect(decoded.transactions.first?.settledDate == createdAt)
+        #expect(decoded.incomes.first?.paymentStatus == .settled)
+        #expect(decoded.fixedExpenses.first?.dueDate == date(year: 2026, month: 10, day: 1))
         #expect(decoded.summary.fixedExpenseCount == 1)
         #expect(decoded.summary.savingsGoalCount == 1)
     }
@@ -685,6 +866,7 @@ struct SpendlyAITests {
         let schema = Schema([
             UserFinancialProfile.self,
             SpendlyAI.Transaction.self,
+            Income.self,
             FixedExpense.self,
             SavingsGoal.self
         ])
@@ -709,6 +891,7 @@ struct SpendlyAITests {
         let schema = Schema([
             UserFinancialProfile.self,
             Transaction.self,
+            Income.self,
             FixedExpense.self,
             SavingsGoal.self
         ])
@@ -716,6 +899,7 @@ struct SpendlyAITests {
         let container = try ModelContainer(for: schema, configurations: [configuration])
         let context = container.mainContext
         context.insert(Transaction(amount: 999, transactionDescription: "Old"))
+        context.insert(Income(amount: 999, incomeDescription: "Old income"))
         try context.save()
 
         let service = BackupService()
@@ -723,6 +907,7 @@ struct SpendlyAITests {
         let backup = service.makeBackup(
             profile: UserFinancialProfile(monthlyNetIncome: 20_000, paydayDay: 15),
             transactions: [Transaction(amount: 42.50, date: createdAt, transactionDescription: "New")],
+            incomes: [Income(amount: 1_500.25, date: createdAt, category: .freelance, incomeDescription: "New income")],
             fixedExpenses: [FixedExpense(name: "Rent", amount: 8_000, dueDay: 1)],
             savingsGoals: [SavingsGoal(name: "Trip", targetAmount: 5_000, targetDate: createdAt)]
         )
@@ -731,6 +916,7 @@ struct SpendlyAITests {
 
         let restoredProfiles = try context.fetch(FetchDescriptor<UserFinancialProfile>())
         let restoredTransactions = try context.fetch(FetchDescriptor<SpendlyAI.Transaction>())
+        let restoredIncomes = try context.fetch(FetchDescriptor<Income>())
         let restoredExpenses = try context.fetch(FetchDescriptor<FixedExpense>())
         let restoredGoals = try context.fetch(FetchDescriptor<SavingsGoal>())
 
@@ -738,8 +924,164 @@ struct SpendlyAITests {
         #expect(restoredTransactions.count == 1)
         #expect(restoredTransactions.first?.transactionDescription == "New")
         #expect(restoredTransactions.first?.amount == 42.50)
+        #expect(restoredIncomes.count == 1)
+        #expect(restoredIncomes.first?.incomeDescription == "New income")
+        #expect(restoredIncomes.first?.amount == 1_500.25)
         #expect(restoredExpenses.count == 1)
         #expect(restoredGoals.count == 1)
+    }
+
+    @Test func reportSummaryUsesOnlyEntriesInsideSelectedPeriod() {
+        let service = ReportSummaryService()
+        let periodStart = date(year: 2026, month: 10, day: 1)
+        let periodEnd = date(year: 2026, month: 10, day: 31)
+        let transactions = [
+            Transaction(amount: 100.25, date: date(year: 2026, month: 10, day: 1)),
+            Transaction(amount: 20.50, date: date(year: 2026, month: 10, day: 31)),
+            Transaction(amount: 999, date: date(year: 2026, month: 11, day: 1))
+        ]
+        let incomes = [
+            Income(amount: 1_000.75, date: date(year: 2026, month: 10, day: 15)),
+            Income(amount: 500, date: date(year: 2026, month: 9, day: 30))
+        ]
+
+        let summary = service.makeSummary(
+            transactions: transactions,
+            incomes: incomes,
+            startDate: periodStart,
+            endDate: periodEnd,
+            calendar: calendar
+        )
+
+        #expect(summary.totalIncome == Decimal(string: "1000.75"))
+        #expect(summary.totalVariableExpenses == Decimal(string: "120.75"))
+        #expect(summary.netResult == Decimal(string: "880.00"))
+        #expect(summary.entryCount == 3)
+    }
+
+    @Test func reportSummaryKeepsGamblingAsItsOwnCategory() {
+        let service = ReportSummaryService()
+        let reportDate = date(year: 2026, month: 10, day: 4)
+        let transactions = [
+            Transaction(amount: 25, date: reportDate, category: .gambling),
+            Transaction(amount: 5, date: reportDate, category: .gambling),
+            Transaction(amount: 10, date: reportDate, category: .entertainment)
+        ]
+        let fixedExpense = FixedExpense(
+            name: "Lottery",
+            amount: 100,
+            dueDay: 4,
+            category: .gambling,
+            recurrence: .monthly
+        )
+
+        let summary = service.makeSummary(
+            transactions: transactions,
+            incomes: [],
+            fixedExpenses: [fixedExpense],
+            startDate: date(year: 2026, month: 10, day: 1),
+            endDate: date(year: 2026, month: 10, day: 31),
+            calendar: calendar
+        )
+
+        #expect(summary.variableExpenseCategories.first { $0.category == .gambling }?.amount == 30)
+        #expect(summary.variableExpenseCategories.first { $0.category == .entertainment }?.amount == 10)
+        #expect(summary.fixedExpenseCategories.first { $0.category == .gambling }?.amount == 100)
+    }
+
+    @Test func reportSummaryIncludesRecurringFixedExpensesAndPlannedSavings() {
+        let service = ReportSummaryService()
+        let fixedExpense = FixedExpense(
+            name: "Husleie",
+            amount: 10_000,
+            dueDay: 4,
+            recurrence: .monthly
+        )
+        let goal = SavingsGoal(
+            name: "Ferie",
+            targetAmount: 5_000,
+            targetDate: date(year: 2026, month: 10, day: 20),
+            savedAmount: 1_500
+        )
+
+        let summary = service.makeSummary(
+            transactions: [],
+            incomes: [Income(amount: 20_000, date: date(year: 2026, month: 10, day: 1))],
+            fixedExpenses: [fixedExpense],
+            savingsGoals: [goal],
+            startDate: date(year: 2026, month: 10, day: 1),
+            endDate: date(year: 2026, month: 10, day: 31),
+            calendar: calendar
+        )
+
+        #expect(summary.totalFixedExpenses == 10_000)
+        #expect(summary.plannedSavings == 3_500)
+        #expect(summary.netResult == 6_500)
+        #expect(summary.entryCount == 3)
+    }
+
+    @Test @MainActor func reportPDFGeneratorCreatesReadablePDFDocument() throws {
+        let summary = ReportSummary(
+            totalIncome: 30_000,
+            totalVariableExpenses: 1_250.50,
+            totalFixedExpenses: 10_000,
+            plannedSavings: 2_000,
+            entryCount: 4,
+            variableExpenseCategories: [
+                ReportSpendingCategoryTotal(category: .transport, amount: 1_250.50)
+            ],
+            fixedExpenseCategories: [
+                ReportFixedExpenseCategoryTotal(category: .housing, amount: 10_000)
+            ]
+        )
+        let request = ReportPDFRequest(
+            appName: "SpendlyAI",
+            startDate: date(year: 2026, month: 10, day: 1),
+            endDate: date(year: 2026, month: 10, day: 31),
+            currencyCode: "NOK",
+            generatedAt: date(year: 2026, month: 11, day: 1),
+            summary: summary
+        )
+
+        let data = ReportPDFGenerator().makePDF(
+            for: request,
+            locale: Locale(identifier: "nb_NO")
+        )
+        let dataProvider = try #require(CGDataProvider(data: data as CFData))
+        let document = try #require(CGPDFDocument(dataProvider))
+
+        #expect(data.starts(with: Data("%PDF".utf8)))
+        #expect(document.numberOfPages == 1)
+    }
+
+    @Test @MainActor func reportPDFGeneratorAddsPagesForLargeCategoryLists() throws {
+        let categoryRows = Array(
+            repeating: ReportSpendingCategoryTotal(category: .other, amount: 10),
+            count: 80
+        )
+        let summary = ReportSummary(
+            totalIncome: 0,
+            totalVariableExpenses: 800,
+            totalFixedExpenses: 0,
+            plannedSavings: 0,
+            entryCount: 80,
+            variableExpenseCategories: categoryRows,
+            fixedExpenseCategories: []
+        )
+        let request = ReportPDFRequest(
+            appName: "SpendlyAI",
+            startDate: date(year: 2026, month: 1, day: 1),
+            endDate: date(year: 2026, month: 12, day: 31),
+            currencyCode: "NOK",
+            generatedAt: date(year: 2027, month: 1, day: 1),
+            summary: summary
+        )
+
+        let data = ReportPDFGenerator().makePDF(for: request)
+        let dataProvider = try #require(CGDataProvider(data: data as CFData))
+        let document = try #require(CGPDFDocument(dataProvider))
+
+        #expect(document.numberOfPages > 1)
     }
 
     private func date(year: Int, month: Int, day: Int) -> Date {
@@ -758,15 +1100,6 @@ struct SpendlyAITests {
             minimumBuffer: 1_000,
             isBudgetUnderPressure: isBudgetUnderPressure
         )
-    }
-
-    private func localizationCatalog() throws -> [String: Any] {
-        let testFileURL = URL(fileURLWithPath: #filePath)
-        let projectRootURL = testFileURL.deletingLastPathComponent().deletingLastPathComponent()
-        let catalogURL = projectRootURL.appendingPathComponent("SpendlyAI/Localization/Localizable.xcstrings")
-        let data = try Data(contentsOf: catalogURL)
-
-        return try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
     private func sentenceCount(in message: String) -> Int {

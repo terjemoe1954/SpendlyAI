@@ -16,6 +16,9 @@ struct TransactionEditorView: View {
     @State private var category: SpendingCategory
     @State private var transactionDescription: String
     @State private var date: Date
+    @State private var dueDate: Date
+    @State private var settledDate: Date
+    @State private var paymentStatus: PaymentStatus
     @State private var isEssential: Bool
     @State private var notes: String
 
@@ -29,6 +32,9 @@ struct TransactionEditorView: View {
         _category = State(initialValue: transaction?.category ?? .other)
         _transactionDescription = State(initialValue: transaction?.transactionDescription ?? "")
         _date = State(initialValue: transaction?.date ?? .now)
+        _dueDate = State(initialValue: transaction?.dueDate ?? transaction?.date ?? .now)
+        _settledDate = State(initialValue: transaction?.settledDate ?? transaction?.date ?? .now)
+        _paymentStatus = State(initialValue: transaction?.paymentStatus ?? .settled)
         _isEssential = State(initialValue: transaction?.isEssential ?? false)
         _notes = State(initialValue: transaction?.notes ?? "")
     }
@@ -50,6 +56,19 @@ struct TransactionEditorView: View {
                     TextField("transaction.description", text: $transactionDescription)
 
                     DatePicker("transaction.dateTime", selection: $date, displayedComponents: [.date, .hourAndMinute])
+
+                    DatePicker("payment.dueDate", selection: $dueDate, displayedComponents: .date)
+
+                    Picker("payment.status", selection: $paymentStatus) {
+                        ForEach(PaymentStatus.allCases, id: \.self) { status in
+                            Text(status.titleKey(for: .expense))
+                                .tag(status)
+                        }
+                    }
+
+                    if paymentStatus == .settled || paymentStatus == .withdrawn {
+                        DatePicker("payment.paidDate", selection: $settledDate, displayedComponents: .date)
+                    }
                 }
 
                 Section {
@@ -92,6 +111,9 @@ struct TransactionEditorView: View {
             transaction.date = date
             transaction.isEssential = isEssential
             transaction.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+            transaction.dueDate = dueDate
+            transaction.settledDate = paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil
+            transaction.paymentStatus = paymentStatus
         } else {
             modelContext.insert(Transaction(
                 amount: decimalAmount,
@@ -99,7 +121,10 @@ struct TransactionEditorView: View {
                 category: category,
                 transactionDescription: trimmedDescription,
                 isEssential: isEssential,
-                notes: trimmedNotes.isEmpty ? nil : trimmedNotes
+                notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+                dueDate: dueDate,
+                settledDate: paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil,
+                paymentStatus: paymentStatus
             ))
         }
 
@@ -107,8 +132,7 @@ struct TransactionEditorView: View {
     }
 
     private func decimalValue(from text: String) -> Decimal? {
-        let normalizedText = text.replacingOccurrences(of: ",", with: ".")
-        return Decimal(string: normalizedText)
+        MoneyParser.decimal(from: text)
     }
 }
 
@@ -125,6 +149,8 @@ extension SpendingCategory {
             "category.shopping"
         case .entertainment:
             "category.entertainment"
+        case .gambling:
+            "category.gambling"
         case .health:
             "category.health"
         case .bills:

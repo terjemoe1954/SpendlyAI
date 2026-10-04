@@ -267,6 +267,8 @@ private enum FixedExpenseSortOption: String, CaseIterable, Identifiable {
 }
 
 private struct FixedExpenseRow: View {
+    @Environment(\.locale) private var locale
+
     let expense: FixedExpense
     let currencyCode: String
 
@@ -287,12 +289,20 @@ private struct FixedExpenseRow: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                Text(expense.effectivePaymentStatus().titleKey(for: .expense))
+                    .font(.caption)
+                    .foregroundStyle(expense.effectivePaymentStatus().displayColor)
             }
 
             Spacer()
 
             VStack(alignment: .trailing, spacing: 4) {
-                Text(expense.amount, format: .currency(code: currencyCode))
+                Text(MoneyFormatter.string(
+                    from: expense.amount,
+                    currencyCode: currencyCode,
+                    locale: locale
+                ))
                     .font(.body.weight(.semibold))
 
                 Text(expense.isActive ? "fixedExpenses.active" : "fixedExpenses.inactive")
@@ -313,7 +323,7 @@ private struct FixedExpenseEditorState: Identifiable {
     }
 }
 
-private struct FixedExpenseEditorView: View {
+struct FixedExpenseEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
 
@@ -325,6 +335,8 @@ private struct FixedExpenseEditorView: View {
     @State private var category: ExpenseCategory
     @State private var recurrence: ExpenseRecurrence
     @State private var isActive: Bool
+    @State private var settledDate: Date
+    @State private var paymentStatus: PaymentStatus
 
     init(expense: FixedExpense?) {
         self.expense = expense
@@ -334,10 +346,12 @@ private struct FixedExpenseEditorView: View {
         _category = State(initialValue: expense?.category ?? .other)
         _recurrence = State(initialValue: expense?.recurrence ?? .monthly)
         _isActive = State(initialValue: expense?.isActive ?? true)
+        _settledDate = State(initialValue: expense?.settledDate ?? .now)
+        _paymentStatus = State(initialValue: expense?.paymentStatus ?? .pending)
     }
 
     private var parsedAmount: Decimal? {
-        Decimal(string: amount.replacingOccurrences(of: ",", with: "."))
+        MoneyParser.decimal(from: amount)
     }
 
     private var canSave: Bool {
@@ -352,6 +366,17 @@ private struct FixedExpenseEditorView: View {
                     TextField("onboarding.expense.amount", text: $amount)
                         .keyboardType(.decimalPad)
                     DatePicker("onboarding.expense.dueDate", selection: $dueDate, displayedComponents: .date)
+
+                    Picker("payment.status", selection: $paymentStatus) {
+                        ForEach(PaymentStatus.allCases, id: \.self) { status in
+                            Text(status.titleKey(for: .expense))
+                                .tag(status)
+                        }
+                    }
+
+                    if paymentStatus == .settled || paymentStatus == .withdrawn {
+                        DatePicker("payment.paidDate", selection: $settledDate, displayedComponents: .date)
+                    }
 
                     Picker("fixedExpenses.category", selection: $category) {
                         ForEach(ExpenseCategory.allCases, id: \.self) { category in
@@ -402,6 +427,9 @@ private struct FixedExpenseEditorView: View {
             expense.category = category
             expense.recurrence = recurrence
             expense.isActive = isActive
+            expense.dueDate = dueDate
+            expense.settledDate = paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil
+            expense.paymentStatus = paymentStatus
         } else {
             modelContext.insert(FixedExpense(
                 name: trimmedName,
@@ -409,7 +437,10 @@ private struct FixedExpenseEditorView: View {
                 dueDay: dueDay,
                 category: category,
                 recurrence: recurrence,
-                isActive: isActive
+                isActive: isActive,
+                dueDate: dueDate,
+                settledDate: paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil,
+                paymentStatus: paymentStatus
             ))
         }
 
@@ -436,6 +467,7 @@ private extension ExpenseCategory {
         case .childcare: "expenseCategory.childcare"
         case .groceries: "expenseCategory.groceries"
         case .health: "expenseCategory.health"
+        case .gambling: "expenseCategory.gambling"
         case .other: "expenseCategory.other"
         }
     }

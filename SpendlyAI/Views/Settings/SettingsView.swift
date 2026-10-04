@@ -11,6 +11,7 @@ struct SettingsView: View {
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
 
     @AppStorage(AppAppearance.storageKey) private var selectedAppearance = AppAppearance.system.rawValue
     @AppStorage(NotificationSettingsStorage.dailyReminderEnabledKey) private var dailyReminderEnabled = false
@@ -96,6 +97,12 @@ struct SettingsView: View {
             }
 
             NavigationLink {
+                ReportsView()
+            } label: {
+                Label("Reports", systemImage: "chart.bar.doc.horizontal")
+            }
+
+            NavigationLink {
                 HelpGuideView()
             } label: {
                 Label("settings.helpGuide", systemImage: "questionmark.circle")
@@ -176,7 +183,8 @@ struct SettingsView: View {
             profile: profile,
             fixedExpenses: fixedExpenses,
             savingsGoals: savingsGoals,
-            transactions: transactions
+            transactions: transactions,
+            incomes: incomes
         )
         let budget = budgetService.calculateBudget(for: budgetInput)
 

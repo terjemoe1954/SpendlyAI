@@ -29,6 +29,7 @@ struct BackupRestoreView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserFinancialProfile]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
 
@@ -153,6 +154,7 @@ struct BackupRestoreView: View {
     private func summaryRows(_ summary: BackupSummary) -> some View {
         LabeledContent("backup.summary.profiles", value: String(summary.profileCount))
         LabeledContent("backup.summary.transactions", value: String(summary.transactionCount))
+        LabeledContent("backup.summary.incomes", value: String(summary.incomeCount))
         LabeledContent("backup.summary.fixedExpenses", value: String(summary.fixedExpenseCount))
         LabeledContent("backup.summary.savingsGoals", value: String(summary.savingsGoalCount))
     }
@@ -163,6 +165,7 @@ struct BackupRestoreView: View {
             formatVersion: SpendlyBackup.currentFormatVersion,
             profileCount: profiles.isEmpty ? 0 : 1,
             transactionCount: transactions.count,
+            incomeCount: incomes.count,
             fixedExpenseCount: fixedExpenses.count,
             savingsGoalCount: savingsGoals.count
         )
@@ -178,6 +181,7 @@ struct BackupRestoreView: View {
             let backup = backupService.makeBackup(
                 profile: profiles.first,
                 transactions: transactions,
+                incomes: incomes,
                 fixedExpenses: fixedExpenses,
                 savingsGoals: savingsGoals
             )
