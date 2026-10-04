@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import SwiftData
 import SwiftUI
 import Testing
 @testable import SpendlyAI
@@ -113,6 +114,91 @@ struct SpendlyAITests {
 
         #expect(result.upcomingFixedExpenses == 700)
         #expect(result.disposableAmount == 1_300)
+    }
+
+    @Test func countsWeeklyExpensesUntilNextIncome() {
+        let service = BudgetService(calendar: calendar)
+        let today = date(year: 2026, month: 10, day: 1)
+        let input = BudgetInput(
+            availableMoney: 2_000,
+            periodStart: today,
+            nextIncomeDate: date(year: 2026, month: 10, day: 23),
+            fixedExpenses: [
+                BudgetFixedExpense(
+                    amount: 100,
+                    dueDay: 3,
+                    recurrence: .weekly
+                )
+            ]
+        )
+
+        let result = service.calculateBudget(for: input, today: today)
+
+        #expect(result.upcomingFixedExpenses == 300)
+        #expect(result.disposableAmount == 1_700)
+    }
+
+    @Test func countsBiweeklyExpensesAcrossMonthBoundary() {
+        let service = BudgetService(calendar: calendar)
+        let today = date(year: 2026, month: 10, day: 25)
+        let input = BudgetInput(
+            availableMoney: 2_000,
+            periodStart: today,
+            nextIncomeDate: date(year: 2026, month: 11, day: 30),
+            fixedExpenses: [
+                BudgetFixedExpense(
+                    amount: 150,
+                    dueDay: 28,
+                    recurrence: .biweekly
+                )
+            ]
+        )
+
+        let result = service.calculateBudget(for: input, today: today)
+
+        #expect(result.upcomingFixedExpenses == 450)
+    }
+
+    @Test func countsQuarterlyExpensesAcrossYearBoundary() {
+        let service = BudgetService(calendar: calendar)
+        let today = date(year: 2026, month: 12, day: 20)
+        let input = BudgetInput(
+            availableMoney: 4_000,
+            periodStart: today,
+            nextIncomeDate: date(year: 2027, month: 4, day: 5),
+            fixedExpenses: [
+                BudgetFixedExpense(
+                    amount: 500,
+                    dueDay: 28,
+                    recurrence: .quarterly
+                )
+            ]
+        )
+
+        let result = service.calculateBudget(for: input, today: today)
+
+        #expect(result.upcomingFixedExpenses == 1_000)
+    }
+
+    @Test func countsYearlyExpensesAcrossMultipleYears() {
+        let service = BudgetService(calendar: calendar)
+        let today = date(year: 2026, month: 12, day: 20)
+        let input = BudgetInput(
+            availableMoney: 4_000,
+            periodStart: today,
+            nextIncomeDate: date(year: 2028, month: 1, day: 5),
+            fixedExpenses: [
+                BudgetFixedExpense(
+                    amount: 600,
+                    dueDay: 28,
+                    recurrence: .yearly
+                )
+            ]
+        )
+
+        let result = service.calculateBudget(for: input, today: today)
+
+        #expect(result.upcomingFixedExpenses == 1_200)
     }
 
     @Test func usesAtLeastOneDayForSameDayIncome() {
@@ -233,7 +319,64 @@ struct SpendlyAITests {
             "ai.ask",
             "goal.add",
             "settings.appName",
-            "settings.profile"
+            "settings.profile",
+            "settings.helpGuide",
+            "help.title",
+            "help.section.gettingStarted",
+            "help.profile.title",
+            "help.profile.setup.body",
+            "help.profile.update.body",
+            "help.dailyBudget.title",
+            "help.dailyBudget.formula.body",
+            "help.dailyBudget.today.body",
+            "help.planning.title",
+            "help.planning.buffer.body",
+            "help.planning.expenses.body",
+            "help.planning.goals.body",
+            "help.transactions.title",
+            "help.transactions.add.body",
+            "help.transactions.edit.body",
+            "help.backup.title",
+            "help.backup.export.body",
+            "help.backup.restore.body",
+            "help.backup.safety.body",
+            "help.faq.title",
+            "help.faq.changes.answer",
+            "help.faq.sync.answer",
+            "help.faq.privacy.answer",
+            "fixedExpenses.title",
+            "fixedExpenses.manage",
+            "fixedExpenses.add",
+            "fixedExpenses.empty.message",
+            "fixedExpenses.category",
+            "fixedExpenses.recurrence",
+            "fixedExpenses.filterAndSort",
+            "fixedExpenses.filter.status",
+            "fixedExpenses.filter.category",
+            "fixedExpenses.filter.recurrence",
+            "fixedExpenses.filter.reset",
+            "fixedExpenses.filter.allStatuses",
+            "fixedExpenses.filter.allCategories",
+            "fixedExpenses.filter.allRecurrences",
+            "fixedExpenses.sort.title",
+            "fixedExpenses.sort.name",
+            "fixedExpenses.sort.amountDescending",
+            "fixedExpenses.sort.dueDay",
+            "expenseCategory.housing",
+            "expenseCategory.utilities",
+            "expenseCategory.insurance",
+            "expenseCategory.transport",
+            "expenseCategory.subscriptions",
+            "expenseCategory.debt",
+            "expenseCategory.childcare",
+            "expenseCategory.groceries",
+            "expenseCategory.health",
+            "expenseCategory.other",
+            "expenseRecurrence.weekly",
+            "expenseRecurrence.biweekly",
+            "expenseRecurrence.monthly",
+            "expenseRecurrence.quarterly",
+            "expenseRecurrence.yearly"
         ]
 
         for key in requiredKeys {
@@ -428,6 +571,175 @@ struct SpendlyAITests {
         #expect(report.pendingRequirements.contains(.conflictValidation))
         #expect(report.pendingRequirements.contains(.offlineOnlineValidation))
         #expect(report.pendingRequirements.contains(.reinstallValidation))
+    }
+
+    @Test func backupRoundTripPreservesAllSupportedData() throws {
+        let service = BackupService()
+        let createdAt = date(year: 2026, month: 10, day: 4)
+        let profile = UserFinancialProfile(
+            monthlyNetIncome: 30_000.50,
+            paydayDay: 19,
+            budgetPeriodStart: createdAt,
+            budgetPeriodEnd: date(year: 2026, month: 11, day: 19),
+            currencyCode: "NOK",
+            minimumBuffer: 1_500.25,
+            createdAt: createdAt,
+            updatedAt: createdAt
+        )
+        let transaction = Transaction(
+            amount: 123.45,
+            date: createdAt,
+            category: .groceries,
+            transactionDescription: "Mat",
+            isEssential: true,
+            notes: "Ukentlig"
+        )
+        let fixedExpense = FixedExpense(
+            name: "Husleie",
+            amount: 12_000.75,
+            dueDay: 1,
+            category: .housing,
+            recurrence: .monthly
+        )
+        let goal = SavingsGoal(
+            name: "Buffer",
+            targetAmount: 50_000.50,
+            targetDate: date(year: 2027, month: 1, day: 1),
+            savedAmount: 2_000.25,
+            priority: .high
+        )
+
+        let original = service.makeBackup(
+            profile: profile,
+            transactions: [transaction],
+            fixedExpenses: [fixedExpense],
+            savingsGoals: [goal],
+            createdAt: createdAt
+        )
+        let decoded = try service.decodeAndValidate(service.encode(original))
+
+        #expect(decoded == original)
+        #expect(decoded.formatVersion == SpendlyBackup.currentFormatVersion)
+        #expect(decoded.summary.profileCount == 1)
+        #expect(decoded.summary.transactionCount == 1)
+        #expect(decoded.summary.fixedExpenseCount == 1)
+        #expect(decoded.summary.savingsGoalCount == 1)
+    }
+
+    @Test func backupAcceptsRepresentableLegacyValues() throws {
+        let service = BackupService()
+        let laterDate = date(year: 2026, month: 10, day: 20)
+        let earlierDate = date(year: 2026, month: 10, day: 1)
+        let backup = service.makeBackup(
+            profile: UserFinancialProfile(
+                monthlyNetIncome: 30_000,
+                paydayDay: 19,
+                budgetPeriodStart: laterDate,
+                budgetPeriodEnd: earlierDate
+            ),
+            transactions: [],
+            fixedExpenses: [FixedExpense(name: "", amount: 100, dueDay: 1)],
+            savingsGoals: [SavingsGoal(name: "", targetAmount: 1_000, targetDate: laterDate)]
+        )
+
+        let decoded = try service.decodeAndValidate(service.encode(backup))
+
+        #expect(decoded.profile?.budgetPeriodStart == laterDate)
+        #expect(decoded.profile?.budgetPeriodEnd == earlierDate)
+        #expect(decoded.fixedExpenses.first?.name == "")
+        #expect(decoded.savingsGoals.first?.name == "")
+    }
+
+    @Test func invalidBackupIsRejectedBeforeRestore() throws {
+        let service = BackupService()
+        let invalidData = Data(#"{"formatVersion":1,"createdAt":"not-a-date"}"#.utf8)
+
+        #expect(throws: BackupError.unreadableFile) {
+            try service.decodeAndValidate(invalidData)
+        }
+    }
+
+    @Test func unsupportedBackupVersionIsRejected() throws {
+        let service = BackupService()
+        let current = service.makeBackup(
+            profile: nil,
+            transactions: [],
+            fixedExpenses: [],
+            savingsGoals: []
+        )
+        let data = try service.encode(SpendlyBackup(
+            formatVersion: 999,
+            createdAt: current.createdAt,
+            profile: nil,
+            transactions: [],
+            fixedExpenses: [],
+            savingsGoals: []
+        ))
+
+        #expect(throws: BackupError.unsupportedVersion(999)) {
+            try service.decodeAndValidate(data)
+        }
+    }
+
+    @Test @MainActor func restoreWorksWithAnEmptyStore() throws {
+        let schema = Schema([
+            UserFinancialProfile.self,
+            SpendlyAI.Transaction.self,
+            FixedExpense.self,
+            SavingsGoal.self
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let context = container.mainContext
+        let service = BackupService()
+        let backup = service.makeBackup(
+            profile: UserFinancialProfile(monthlyNetIncome: 10_000, paydayDay: 1),
+            transactions: [],
+            fixedExpenses: [],
+            savingsGoals: []
+        )
+
+        try service.restore(backup, in: context)
+
+        #expect(try context.fetchCount(FetchDescriptor<UserFinancialProfile>()) == 1)
+        #expect(try context.fetchCount(FetchDescriptor<SpendlyAI.Transaction>()) == 0)
+    }
+
+    @Test @MainActor func restoreReplacesAllSupportedData() throws {
+        let schema = Schema([
+            UserFinancialProfile.self,
+            Transaction.self,
+            FixedExpense.self,
+            SavingsGoal.self
+        ])
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: schema, configurations: [configuration])
+        let context = container.mainContext
+        context.insert(Transaction(amount: 999, transactionDescription: "Old"))
+        try context.save()
+
+        let service = BackupService()
+        let createdAt = date(year: 2026, month: 10, day: 4)
+        let backup = service.makeBackup(
+            profile: UserFinancialProfile(monthlyNetIncome: 20_000, paydayDay: 15),
+            transactions: [Transaction(amount: 42.50, date: createdAt, transactionDescription: "New")],
+            fixedExpenses: [FixedExpense(name: "Rent", amount: 8_000, dueDay: 1)],
+            savingsGoals: [SavingsGoal(name: "Trip", targetAmount: 5_000, targetDate: createdAt)]
+        )
+
+        try service.restore(backup, in: context)
+
+        let restoredProfiles = try context.fetch(FetchDescriptor<UserFinancialProfile>())
+        let restoredTransactions = try context.fetch(FetchDescriptor<SpendlyAI.Transaction>())
+        let restoredExpenses = try context.fetch(FetchDescriptor<FixedExpense>())
+        let restoredGoals = try context.fetch(FetchDescriptor<SavingsGoal>())
+
+        #expect(restoredProfiles.count == 1)
+        #expect(restoredTransactions.count == 1)
+        #expect(restoredTransactions.first?.transactionDescription == "New")
+        #expect(restoredTransactions.first?.amount == 42.50)
+        #expect(restoredExpenses.count == 1)
+        #expect(restoredGoals.count == 1)
     }
 
     private func date(year: Int, month: Int, day: Int) -> Date {

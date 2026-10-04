@@ -90,6 +90,18 @@ struct SettingsView: View {
             }
 
             NavigationLink {
+                BackupRestoreView()
+            } label: {
+                Label("settings.backupAndRestore", systemImage: "externaldrive")
+            }
+
+            NavigationLink {
+                HelpGuideView()
+            } label: {
+                Label("settings.helpGuide", systemImage: "questionmark.circle")
+            }
+
+            NavigationLink {
                 PrivacyAndSupportView()
             } label: {
                 Label("settings.privacyAndSupport", systemImage: "lock.shield")

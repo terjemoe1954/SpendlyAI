@@ -421,18 +421,123 @@ Etter at lokal MVP fungerer stabilt:
 -   [x] Subtitle
 -   [x] App Description
 -   [x] Keywords
--   [ ] Screenshots
+-   [x] Screenshots
 -   [x] Privacy Policy URL
 -   [x] Support URL
 -   [x] App Privacy
 -   [x] Age Rating
--   [ ] Pris / abonnement
--   [ ] Subscription metadata hvis aktuelt
+-   [x] Pris: gratis app
+-   [x] Abonnement fjernet midlertidig fra salg til Plus-funksjonene er implementert
+-   [x] Subscription metadata konfigurert og tidligere godkjent
 -   [x] Review Notes
 -   [x] Demo-/testinformasjon dersom Apple trenger det
 -   [x] Version `1.0`
--   [ ] Production build
--   [ ] Send til App Review
+-   [x] Production build
+-   [x] Versjon 1.0 publisert i App Store
+-   [x] Versjon 1.0.2 build 5 sendt til App Review med release-opprydding
+
+------------------------------------------------------------------------
+
+# MILESTONE 18 --- Backup, gjenoppretting og brukerveiledning
+
+Planlegges som versjon `1.1` etter at versjon `1.0.2` er godkjent. Ikke
+avbryt den pågående App Review-innsendingen for å ta med disse endringene.
+
+### Backup og gjenoppretting
+
+-   [x] Eksporter profil, transaksjoner, faste utgifter og sparemål i én backupfil
+-   [x] Bruk et versjonert filformat som kan migreres i fremtidige appversjoner
+-   [x] Lagre eller dele backup via Apples dokumentvelger, inkludert iCloud Drive
+-   [x] Importer backup via dokumentvelger
+-   [x] Valider filformat og innhold før data endres
+-   [x] Vis dato, filversjon og antall poster før gjenoppretting
+-   [x] Krev tydelig bekreftelse før eksisterende data overskrives
+-   [x] Håndter ugyldige, skadede og inkompatible backupfiler uten datatap
+-   [x] Test eksport og import på fysisk iPhone og iPad
+    -   [x] Fysisk iPhone: eksport, iCloud Drive, import, forhåndsvisning,
+        bekreftelse og komplett gjenoppretting verifisert 4. oktober 2026
+    -   [x] Fysisk iPad: eksport, iCloud Drive, import, forhåndsvisning,
+        bekreftelse og komplett gjenoppretting verifisert 4. oktober 2026
+-   [x] Test ny installasjon, overskriving og gjenoppretting av komplett datasett
+
+### Brukerveiledning
+
+-   [x] Legg til `Innstillinger → Hjelp og brukerveiledning`
+-   [x] Forklar onboarding og økonomisk profil
+-   [x] Forklar formelen bak «kan bruke i dag»
+-   [x] Forklar minimumsbuffer, faste utgifter og sparemål
+-   [x] Forklar registrering, redigering og sletting av transaksjoner
+-   [x] Forklar backup og gjenoppretting
+-   [x] Legg til korte svar på vanlige spørsmål
+-   [x] Lokaliser veiledningen til norsk, engelsk og thai
+
+### Faste utgifter
+
+-   [x] Flytt administrasjon av faste utgifter ut av Settings
+-   [x] Gi faste utgifter en egen oversikt under budsjett/aktivitet, egnet for mange poster
+-   [x] Støtt søk, sortering og filtrering når listen blir lang
+-   [x] La brukeren velge kategori når en fast utgift opprettes
+-   [x] La brukeren velge gjentakelsesintervall når en fast utgift opprettes
+-   [x] Støtt minst ukentlig, annenhver uke, månedlig, kvartalsvis og årlig
+-   [x] Vis valgt kategori og intervall i oversikten over faste utgifter
+-   [x] La kategori og intervall endres senere i oversikten over faste utgifter
+-   [x] Oppdater Budget Engine slik at hvert intervall beregnes korrekt frem til neste inntekt
+-   [x] Test forfallsdato, månedsskifte, årsskifte og flere forekomster i samme budsjettperiode
+-   [x] Lokaliser kategorier og intervaller til norsk, engelsk og thai
+
+### Inntekter og økonomisk aktivitet
+
+-   [ ] La brukeren registrere inntekter i tillegg til utgifter
+-   [ ] Skill tydelig mellom inntekt og utgift i datamodell og brukergrensesnitt
+-   [ ] Støtt engangsinntekt og gjentakende inntekt
+-   [ ] La inntekt få dato, beløp, kategori, beskrivelse og notat
+-   [ ] Vis inntekter og utgifter samlet i en skalerbar aktivitetsoversikt
+-   [ ] Støtt filtrering på inntekter, utgifter og faste utgifter
+-   [ ] Oppdater Budget Engine når inntekter registreres eller endres
+-   [ ] Unngå dobbelttelling mellom forventet lønn og registrerte inntekter
+-   [ ] Test uregelmessig inntekt, flere inntekter og inntekt midt i budsjettperioden
+
+### Kategorier
+
+-   [ ] Legg til kategorien `Pengespill` / `Gambling`
+-   [ ] Gjør kategorien tilgjengelig for relevante utgifter og transaksjoner
+-   [ ] Hold pengespill adskilt fra underholdning i summer og fremtidige rapporter
+-   [ ] Lokaliser kategorien til norsk, engelsk og thai
+
+### Beløpsformat og desimaler
+
+-   [ ] Vis pengebeløp med to desimaler i hele appen
+-   [ ] Bruk lokal desimalskilletegn og tusenskilletegn, for eksempel `1 812,50 kr` på norsk
+-   [ ] Behold full Decimal-presisjon i beregninger og unngå Double for pengebeløp
+-   [ ] Tillat registrering av beløp med både komma og punktum som desimalskilletegn
+-   [ ] Bruk samme valutaformat på dashboard, transaksjoner, mål, faste utgifter, inntekter, backup og rapporter
+-   [ ] Test avrunding, nullbeløp, negative beløp og store beløp
+
+### Rapporter, eksport og utskrift
+
+-   [ ] Lag en egen rapportvisning basert på brukerens faktiske data
+-   [ ] La brukeren velge datoperiode
+-   [ ] Oppsummer inntekter, variable utgifter, faste utgifter, sparing og nettoresultat
+-   [ ] Vis summer per kategori, inkludert `Pengespill`
+-   [ ] Lag PDF-rapport med appnavn, periode, valuta og genereringsdato
+-   [ ] Vis forhåndsvisning før eksport eller utskrift
+-   [ ] Støtt Apples deleark for lagring, sending og utskrift
+-   [ ] Støtt CSV-eksport av transaksjoner og inntekter
+-   [ ] Sørg for at rapporter ikke inneholder mer persondata enn nødvendig
+-   [ ] Test tom periode, store datasett, flere valutaer og sideskift i PDF
+-   [ ] Lokaliser rapportoverskrifter til norsk, engelsk og thai
+
+### Generell brukeropplevelse
+
+-   [ ] Vis en tydelig bekreftelse etter at økonomiprofilen er lagret
+
+### Release-opprydding gjennomført i 1.0.2
+
+-   [x] Fjernet intern `iCloud Sync Readiness`-side fra Settings
+-   [x] Fjernet ikke-implementerte Plus-løfter fra brukergrensesnittet
+-   [x] Stoppet nye Plus-kjøp i appen
+-   [x] Beholdt abonnementsstatus og Restore Purchases for eksisterende kunder
+-   [x] Fjernet abonnementet fra salg i App Store Connect
 
 ------------------------------------------------------------------------
 

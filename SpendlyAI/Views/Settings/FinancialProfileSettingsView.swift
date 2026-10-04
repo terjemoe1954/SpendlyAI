@@ -9,14 +9,12 @@ import SwiftUI
 struct FinancialProfileSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var profiles: [UserFinancialProfile]
-    @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
 
     @State private var monthlyNetIncome = ""
     @State private var nextPayday = Date.now
     @State private var minimumBuffer = ""
     @State private var selectedCurrencyCode = "NOK"
-    @State private var expenseDrafts: [ProfileExpenseDraft] = []
     @State private var savingsGoalName = ""
     @State private var savingsGoalAmount = ""
     @State private var savingsGoalDate = Calendar.current.date(byAdding: .month, value: 3, to: .now) ?? .now
@@ -31,7 +29,6 @@ struct FinancialProfileSettingsView: View {
     var body: some View {
         Form {
             incomeSection
-            expenseSection
             bufferSection
             goalSection
         }
@@ -65,28 +62,6 @@ struct FinancialProfileSettingsView: View {
         }
     }
 
-    private var expenseSection: some View {
-        Section("onboarding.expenses.section") {
-            ForEach($expenseDrafts) { $expense in
-                VStack(alignment: .leading, spacing: AppSpacing.medium) {
-                    TextField("onboarding.expense.name", text: $expense.name)
-                    TextField("onboarding.expense.amount", text: $expense.amount)
-                        .keyboardType(.decimalPad)
-                    DatePicker("onboarding.expense.dueDate", selection: $expense.dueDate, displayedComponents: .date)
-                }
-            }
-            .onDelete { indexSet in
-                expenseDrafts.remove(atOffsets: indexSet)
-            }
-
-            Button {
-                expenseDrafts.append(ProfileExpenseDraft())
-            } label: {
-                Label("onboarding.expense.add", systemImage: "plus")
-            }
-        }
-    }
-
     private var bufferSection: some View {
         Section("onboarding.buffer.section") {
             TextField("onboarding.minimumBuffer", text: $minimumBuffer)
@@ -112,14 +87,6 @@ struct FinancialProfileSettingsView: View {
             nextPayday = profile.budgetPeriodEnd
             minimumBuffer = profile.minimumBuffer.description
             selectedCurrencyCode = profile.currencyCode
-        }
-
-        expenseDrafts = fixedExpenses.map { expense in
-            ProfileExpenseDraft(
-                name: expense.name,
-                amount: expense.amount.description,
-                dueDate: dateForDay(expense.dueDay)
-            )
         }
 
         if let savingsGoal = savingsGoals.first {
@@ -152,25 +119,6 @@ struct FinancialProfileSettingsView: View {
         profile.minimumBuffer = buffer
         profile.updatedAt = now
 
-        for expense in fixedExpenses {
-            modelContext.delete(expense)
-        }
-
-        for expense in expenseDrafts {
-            guard let amount = decimalValue(from: expense.amount), !expense.name.isEmpty else {
-                continue
-            }
-
-            modelContext.insert(FixedExpense(
-                name: expense.name,
-                amount: amount,
-                dueDay: calendar.component(.day, from: expense.dueDate),
-                category: .other,
-                recurrence: .monthly,
-                isActive: true
-            ))
-        }
-
         for savingsGoal in savingsGoals {
             modelContext.delete(savingsGoal)
         }
@@ -186,24 +134,10 @@ struct FinancialProfileSettingsView: View {
         }
     }
 
-    private func dateForDay(_ day: Int) -> Date {
-        let calendar = Calendar.current
-        var components = calendar.dateComponents([.year, .month], from: .now)
-        components.day = min(max(day, 1), 28)
-        return calendar.date(from: components) ?? .now
-    }
-
     private func decimalValue(from text: String) -> Decimal? {
         let normalizedText = text.replacingOccurrences(of: ",", with: ".")
         return Decimal(string: normalizedText)
     }
-}
-
-private struct ProfileExpenseDraft: Identifiable {
-    let id = UUID()
-    var name = ""
-    var amount = ""
-    var dueDate = Date.now
 }
 
 #Preview {

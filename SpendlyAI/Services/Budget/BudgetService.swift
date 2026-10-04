@@ -36,11 +36,27 @@ public struct BudgetInput {
 public struct BudgetFixedExpense {
     public let amount: Decimal
     public let dueDay: Int
+    let recurrence: ExpenseRecurrence
     public let isActive: Bool
 
     public init(amount: Decimal, dueDay: Int, isActive: Bool = true) {
+        self.init(
+            amount: amount,
+            dueDay: dueDay,
+            recurrence: .monthly,
+            isActive: isActive
+        )
+    }
+
+    init(
+        amount: Decimal,
+        dueDay: Int,
+        recurrence: ExpenseRecurrence,
+        isActive: Bool = true
+    ) {
         self.amount = amount
         self.dueDay = dueDay
+        self.recurrence = recurrence
         self.isActive = isActive
     }
 }
@@ -123,12 +139,23 @@ public struct BudgetService {
     ) -> Decimal {
         expenses.reduce(0) { total, expense in
             guard expense.isActive,
-                  let dueDate = nextDueDate(forDay: expense.dueDay, from: startDate),
+                  var dueDate = nextDueDate(forDay: expense.dueDay, from: startDate),
                   dueDate <= endDate else {
                 return total
             }
 
-            return total + expense.amount
+            var expenseTotal: Decimal = 0
+            while dueDate <= endDate {
+                expenseTotal += expense.amount
+
+                guard let nextDate = nextDueDate(after: dueDate, recurrence: expense.recurrence),
+                      nextDate > dueDate else {
+                    break
+                }
+                dueDate = nextDate
+            }
+
+            return total + expenseTotal
         }
     }
 
@@ -161,6 +188,21 @@ public struct BudgetService {
 
         return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
     }
+
+    private func nextDueDate(after date: Date, recurrence: ExpenseRecurrence) -> Date? {
+        switch recurrence {
+        case .weekly:
+            return calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly:
+            return calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly:
+            return calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly:
+            return calendar.date(byAdding: .month, value: 3, to: date)
+        case .yearly:
+            return calendar.date(byAdding: .year, value: 1, to: date)
+        }
+    }
 }
 
 extension BudgetService {
@@ -178,6 +220,7 @@ extension BudgetService {
                 BudgetFixedExpense(
                     amount: expense.amount,
                     dueDay: expense.dueDay,
+                    recurrence: expense.recurrence,
                     isActive: expense.isActive
                 )
             },

@@ -186,6 +186,14 @@ struct DashboardView: View {
                     .background(.background, in: RoundedRectangle(cornerRadius: 8))
                 }
             }
+
+            NavigationLink {
+                FixedExpensesView()
+            } label: {
+                Label("fixedExpenses.manage", systemImage: "list.bullet")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
         }
     }
 
