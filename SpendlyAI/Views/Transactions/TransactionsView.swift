@@ -34,8 +34,10 @@ struct TransactionsView: View {
             )
         case .purchases:
             return transactions.map(ActivityItem.purchase)
+                .sorted { $0.date > $1.date }
         case .incomes:
             return incomes.map(ActivityItem.income)
+                .sorted { $0.date > $1.date }
         case .fixedExpenses:
             return preparedFixedExpenseItems(fixedExpenses)
         }
@@ -150,7 +152,7 @@ struct TransactionsView: View {
 
     private func preparedFixedExpenseItems(_ expenses: [FixedExpense]) -> [ActivityItem] {
         expenses.compactMap { expense in
-            guard let dueDate = nextDueDate(forDay: expense.dueDay) else {
+            guard let dueDate = nextDueDate(for: expense) else {
                 return nil
             }
             return .fixedExpense(expense, dueDate: dueDate)
@@ -158,7 +160,30 @@ struct TransactionsView: View {
         .sorted { $0.date > $1.date }
     }
 
-    private func nextDueDate(forDay day: Int, from date: Date = .now) -> Date? {
+    private func nextDueDate(for expense: FixedExpense, from date: Date = .now) -> Date? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: date)
+
+        guard var dueDate = expense.dueDate else {
+            return nextMonthlyDueDate(forDay: expense.dueDay, from: today)
+        }
+
+        dueDate = calendar.startOfDay(for: dueDate)
+        while dueDate < today {
+            guard let nextDate = nextOccurrence(
+                after: dueDate,
+                recurrence: expense.recurrence,
+                customMonths: expense.customRecurrenceMonths
+            ), nextDate > dueDate else {
+                return nil
+            }
+            dueDate = nextDate
+        }
+
+        return dueDate
+    }
+
+    private func nextMonthlyDueDate(forDay day: Int, from date: Date) -> Date? {
         let calendar = Calendar.current
         let safeDay = min(max(day, 1), 28)
         var components = calendar.dateComponents([.year, .month], from: date)
@@ -168,11 +193,36 @@ struct TransactionsView: View {
             return nil
         }
 
-        if dueDateThisMonth >= calendar.startOfDay(for: date) {
+        if dueDateThisMonth >= date {
             return dueDateThisMonth
         }
 
         return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
+    }
+
+    private func nextOccurrence(
+        after date: Date,
+        recurrence: ExpenseRecurrence,
+        customMonths: Int
+    ) -> Date? {
+        let calendar = Calendar.current
+
+        return switch recurrence {
+        case .weekly:
+            calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly:
+            calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly:
+            calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly:
+            calendar.date(byAdding: .month, value: 3, to: date)
+        case .semiannual:
+            calendar.date(byAdding: .month, value: 6, to: date)
+        case .yearly:
+            calendar.date(byAdding: .year, value: 1, to: date)
+        case .custom:
+            calendar.date(byAdding: .month, value: max(customMonths, 1), to: date)
+        }
     }
 }
 
@@ -215,8 +265,8 @@ private enum ActivityItem: Identifiable {
 
     var date: Date {
         switch self {
-        case .purchase(let transaction): transaction.date
-        case .income(let income): income.date
+        case .purchase(let transaction): transaction.dueDate ?? transaction.date
+        case .income(let income): income.dueDate ?? income.date
         case .fixedExpense(_, let dueDate): dueDate
         }
     }
@@ -258,7 +308,7 @@ private struct ActivityRow: View {
                 title: transaction.transactionDescription,
                 untitledKey: "transaction.untitled",
                 categoryKey: transaction.category.titleKey,
-                date: transaction.date,
+                date: transaction.dueDate ?? transaction.date,
                 amount: transaction.amount,
                 currencyCode: currencyCode,
                 isIncome: false,
@@ -270,7 +320,7 @@ private struct ActivityRow: View {
                 title: income.incomeDescription,
                 untitledKey: "income.untitled",
                 categoryKey: income.category.titleKey,
-                date: income.date,
+                date: income.dueDate ?? income.date,
                 amount: income.amount,
                 currencyCode: currencyCode,
                 isIncome: true,

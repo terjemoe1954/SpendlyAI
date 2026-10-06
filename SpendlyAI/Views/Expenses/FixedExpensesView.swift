@@ -343,7 +343,7 @@ struct FixedExpenseEditorView: View {
         self.expense = expense
         _name = State(initialValue: expense?.name ?? "")
         _amount = State(initialValue: expense?.amount.description ?? "")
-        _dueDate = State(initialValue: Self.date(for: expense?.dueDay ?? Calendar.current.component(.day, from: .now)))
+        _dueDate = State(initialValue: expense?.dueDate ?? Self.date(for: expense?.dueDay ?? Calendar.current.component(.day, from: .now)))
         _category = State(initialValue: expense?.category ?? .other)
         _recurrence = State(initialValue: expense?.recurrence ?? .monthly)
         _customRecurrenceMonths = State(initialValue: expense?.customRecurrenceMonths ?? 1)

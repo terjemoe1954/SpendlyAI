@@ -153,7 +153,8 @@ struct OnboardingView: View {
                 dueDay: calendar.component(.day, from: expense.dueDate),
                 category: .other,
                 recurrence: .monthly,
-                isActive: true
+                isActive: true,
+                dueDate: expense.dueDate
             ))
         }
 

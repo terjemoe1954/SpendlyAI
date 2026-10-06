@@ -10,10 +10,14 @@ struct IncomesView: View {
     @State private var editorState: IncomeEditorState?
 
     private var visibleIncomes: [Income] {
-        guard !searchText.isEmpty else { return incomes }
-        return incomes.filter {
-            $0.incomeDescription.localizedStandardContains(searchText)
-        }
+        incomes
+            .filter {
+                searchText.isEmpty
+                    || $0.incomeDescription.localizedStandardContains(searchText)
+            }
+            .sorted {
+                ($0.dueDate ?? $0.date) > ($1.dueDate ?? $1.date)
+            }
     }
 
     private var currencyCode: String {
@@ -93,7 +97,7 @@ private struct IncomeRow: View {
 
                 HStack(spacing: 6) {
                     Text(income.category.titleKey)
-                    Text(income.date, format: .dateTime.day().month().year())
+                    Text(income.dueDate ?? income.date, format: .dateTime.day().month().year())
                     if income.recurrence != .oneTime {
                         Text(income.recurrence.titleKey)
                     }
@@ -137,7 +141,6 @@ struct IncomeEditorView: View {
     let income: Income?
 
     @State private var amount: String
-    @State private var date: Date
     @State private var category: IncomeCategory
     @State private var incomeDescription: String
     @State private var notes: String
@@ -150,7 +153,6 @@ struct IncomeEditorView: View {
     init(income: Income?) {
         self.income = income
         _amount = State(initialValue: income?.amount.description ?? "")
-        _date = State(initialValue: income?.date ?? .now)
         _category = State(initialValue: income?.category ?? .salary)
         _incomeDescription = State(initialValue: income?.incomeDescription ?? "")
         _notes = State(initialValue: income?.notes ?? "")
@@ -176,12 +178,6 @@ struct IncomeEditorView: View {
                 Section("income.details") {
                     TextField("income.amount", text: $amount)
                         .keyboardType(.decimalPad)
-
-                    DatePicker(
-                        "income.date",
-                        selection: $date,
-                        displayedComponents: .date
-                    )
 
                     DatePicker("payment.dueDate", selection: $dueDate, displayedComponents: .date)
 
@@ -260,7 +256,6 @@ struct IncomeEditorView: View {
 
         if let income {
             income.amount = parsedAmount
-            income.date = date
             income.category = category
             income.incomeDescription = trimmedDescription
             income.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
@@ -273,7 +268,7 @@ struct IncomeEditorView: View {
             modelContext.insert(
                 Income(
                     amount: parsedAmount,
-                    date: date,
+                    date: .now,
                     category: category,
                     incomeDescription: trimmedDescription,
                     notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
