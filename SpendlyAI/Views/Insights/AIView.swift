@@ -76,7 +76,7 @@ struct AIView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                Text(viewModel.answer)
+                Text(verbatim: viewModel.answer)
                     .font(.body)
                     .foregroundStyle(.secondary)
             }

@@ -9,7 +9,7 @@ import SwiftUI
 @Observable
 final class AIViewModel {
     var question = ""
-    var answer: LocalizedStringKey = "ai.emptyAnswer"
+    var answer = String(localized: "ai.emptyAnswer")
     var isLoading = false
     var lastError: AIServiceError?
 
@@ -25,7 +25,8 @@ final class AIViewModel {
 
     func ask(using budgetContext: AIBudgetContext?) async {
         guard let budgetContext else {
-            answer = "ai.fallback.noBudget"
+            answer = String(localized: "ai.fallback.noBudget")
+            lastError = nil
             return
         }
 
@@ -40,11 +41,11 @@ final class AIViewModel {
 
         switch result {
         case .success(let response):
-            answer = LocalizedStringKey(response.message)
+            answer = response.message
             lastError = nil
         case .failure(let error):
             let fallback = aiService.fallbackAnswer(for: request, after: error)
-            answer = LocalizedStringKey(fallback.message)
+            answer = fallback.message
             lastError = error
         }
     }

@@ -58,38 +58,79 @@ enum MoneyParser {
 }
 
 enum ExpenseCategory: String, Codable, CaseIterable {
-    case housing
-    case utilities
-    case insurance
-    case transport
     case subscriptions
+    case other
+    case groceries
+    case insurance
+    case gifts
+    case health
+    case housing
+    case income
+    case clothing
+    case communication
+    case gambling
+    case savings
+    case transport
+    case withdrawals
+    case entertainment
+    case developer
+
+    // Retained so existing data from earlier versions can still be decoded.
+    case utilities
     case debt
     case childcare
-    case groceries
-    case health
-    case gambling
-    case other
+
+    static var allCases: [ExpenseCategory] {
+        [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .housing,
+         .income, .clothing, .communication, .gambling, .savings, .transport,
+         .withdrawals, .entertainment, .developer]
+    }
 }
 
 enum ExpenseRecurrence: String, Codable, CaseIterable {
-    case weekly
-    case biweekly
     case monthly
     case quarterly
+    case semiannual
     case yearly
+    case custom
+
+    // Retained so existing data from earlier versions can still be decoded.
+    case weekly
+    case biweekly
+
+    static var allCases: [ExpenseRecurrence] {
+        [.monthly, .quarterly, .semiannual, .yearly, .custom]
+    }
 }
 
 enum SpendingCategory: String, Codable, CaseIterable {
-    case food
-    case groceries
-    case transport
-    case shopping
-    case entertainment
-    case gambling
-    case health
-    case bills
-    case savings
+    case subscriptions
     case other
+    case groceries
+    case insurance
+    case gifts
+    case health
+    case home
+    case income
+    case clothing
+    case communication
+    case gambling
+    case savings
+    case transport
+    case withdrawals
+    case entertainment
+    case developer
+
+    // Retained so existing data from earlier versions can still be decoded.
+    case food
+    case shopping
+    case bills
+
+    static var allCases: [SpendingCategory] {
+        [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .home,
+         .income, .clothing, .communication, .gambling, .savings, .transport,
+         .withdrawals, .entertainment, .developer]
+    }
 }
 
 enum GoalPriority: Int, Codable, CaseIterable {

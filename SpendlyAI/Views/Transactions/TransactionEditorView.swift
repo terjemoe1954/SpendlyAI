@@ -15,11 +15,9 @@ struct TransactionEditorView: View {
     @State private var amount: String
     @State private var category: SpendingCategory
     @State private var transactionDescription: String
-    @State private var date: Date
     @State private var dueDate: Date
     @State private var settledDate: Date
     @State private var paymentStatus: PaymentStatus
-    @State private var isEssential: Bool
     @State private var notes: String
 
     private var canSave: Bool {
@@ -31,11 +29,9 @@ struct TransactionEditorView: View {
         _amount = State(initialValue: transaction?.amount.description ?? "")
         _category = State(initialValue: transaction?.category ?? .other)
         _transactionDescription = State(initialValue: transaction?.transactionDescription ?? "")
-        _date = State(initialValue: transaction?.date ?? .now)
         _dueDate = State(initialValue: transaction?.dueDate ?? transaction?.date ?? .now)
         _settledDate = State(initialValue: transaction?.settledDate ?? transaction?.date ?? .now)
         _paymentStatus = State(initialValue: transaction?.paymentStatus ?? .settled)
-        _isEssential = State(initialValue: transaction?.isEssential ?? false)
         _notes = State(initialValue: transaction?.notes ?? "")
     }
 
@@ -55,8 +51,6 @@ struct TransactionEditorView: View {
 
                     TextField("transaction.description", text: $transactionDescription)
 
-                    DatePicker("transaction.dateTime", selection: $date, displayedComponents: [.date, .hourAndMinute])
-
                     DatePicker("payment.dueDate", selection: $dueDate, displayedComponents: .date)
 
                     Picker("payment.status", selection: $paymentStatus) {
@@ -69,10 +63,6 @@ struct TransactionEditorView: View {
                     if paymentStatus == .settled || paymentStatus == .withdrawn {
                         DatePicker("payment.paidDate", selection: $settledDate, displayedComponents: .date)
                     }
-                }
-
-                Section {
-                    Toggle("transaction.essential", isOn: $isEssential)
                 }
 
                 Section("transaction.notes") {
@@ -108,8 +98,6 @@ struct TransactionEditorView: View {
             transaction.amount = decimalAmount
             transaction.category = category
             transaction.transactionDescription = trimmedDescription
-            transaction.date = date
-            transaction.isEssential = isEssential
             transaction.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
             transaction.dueDate = dueDate
             transaction.settledDate = paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil
@@ -117,10 +105,10 @@ struct TransactionEditorView: View {
         } else {
             modelContext.insert(Transaction(
                 amount: decimalAmount,
-                date: date,
+                date: .now,
                 category: category,
                 transactionDescription: trimmedDescription,
-                isEssential: isEssential,
+                isEssential: false,
                 notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                 dueDate: dueDate,
                 settledDate: paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil,
@@ -139,26 +127,25 @@ struct TransactionEditorView: View {
 extension SpendingCategory {
     var titleKey: LocalizedStringKey {
         switch self {
-        case .food:
-            "category.food"
-        case .groceries:
-            "category.groceries"
-        case .transport:
-            "category.transport"
-        case .shopping:
-            "category.shopping"
-        case .entertainment:
-            "category.entertainment"
-        case .gambling:
-            "category.gambling"
-        case .health:
-            "category.health"
-        case .bills:
-            "category.bills"
-        case .savings:
-            "category.savings"
-        case .other:
-            "category.other"
+        case .subscriptions: "expenseCategory.subscriptions"
+        case .other: "category.other"
+        case .groceries: "category.groceries"
+        case .insurance: "expenseCategory.insurance"
+        case .gifts: "category.gifts"
+        case .health: "category.health"
+        case .home: "category.home"
+        case .income: "category.income"
+        case .clothing: "category.clothing"
+        case .communication: "category.communication"
+        case .gambling: "category.gambling"
+        case .savings: "category.savings"
+        case .transport: "category.transport"
+        case .withdrawals: "category.withdrawals"
+        case .entertainment: "category.entertainment"
+        case .developer: "category.developer"
+        case .food: "category.food"
+        case .shopping: "category.shopping"
+        case .bills: "category.bills"
         }
     }
 }

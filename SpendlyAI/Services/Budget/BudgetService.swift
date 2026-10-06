@@ -37,6 +37,7 @@ public struct BudgetFixedExpense {
     public let amount: Decimal
     public let dueDay: Int
     let recurrence: ExpenseRecurrence
+    let customRecurrenceMonths: Int
     public let isActive: Bool
 
     public init(amount: Decimal, dueDay: Int, isActive: Bool = true) {
@@ -44,6 +45,7 @@ public struct BudgetFixedExpense {
             amount: amount,
             dueDay: dueDay,
             recurrence: .monthly,
+            customRecurrenceMonths: 1,
             isActive: isActive
         )
     }
@@ -52,11 +54,13 @@ public struct BudgetFixedExpense {
         amount: Decimal,
         dueDay: Int,
         recurrence: ExpenseRecurrence,
+        customRecurrenceMonths: Int = 1,
         isActive: Bool = true
     ) {
         self.amount = amount
         self.dueDay = dueDay
         self.recurrence = recurrence
+        self.customRecurrenceMonths = max(customRecurrenceMonths, 1)
         self.isActive = isActive
     }
 }
@@ -148,7 +152,7 @@ public struct BudgetService {
             while dueDate <= endDate {
                 expenseTotal += expense.amount
 
-                guard let nextDate = nextDueDate(after: dueDate, recurrence: expense.recurrence),
+                guard let nextDate = nextDueDate(after: dueDate, recurrence: expense.recurrence, customMonths: expense.customRecurrenceMonths),
                       nextDate > dueDate else {
                     break
                 }
@@ -189,7 +193,7 @@ public struct BudgetService {
         return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
     }
 
-    private func nextDueDate(after date: Date, recurrence: ExpenseRecurrence) -> Date? {
+    private func nextDueDate(after date: Date, recurrence: ExpenseRecurrence, customMonths: Int) -> Date? {
         switch recurrence {
         case .weekly:
             return calendar.date(byAdding: .day, value: 7, to: date)
@@ -199,6 +203,10 @@ public struct BudgetService {
             return calendar.date(byAdding: .month, value: 1, to: date)
         case .quarterly:
             return calendar.date(byAdding: .month, value: 3, to: date)
+        case .semiannual:
+            return calendar.date(byAdding: .month, value: 6, to: date)
+        case .custom:
+            return calendar.date(byAdding: .month, value: max(customMonths, 1), to: date)
         case .yearly:
             return calendar.date(byAdding: .year, value: 1, to: date)
         }
@@ -229,6 +237,7 @@ extension BudgetService {
                     amount: expense.amount,
                     dueDay: expense.dueDay,
                     recurrence: expense.recurrence,
+                    customRecurrenceMonths: expense.customRecurrenceMonths,
                     isActive: expense.isActive
                 )
             },

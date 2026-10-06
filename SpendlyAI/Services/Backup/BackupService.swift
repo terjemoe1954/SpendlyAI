@@ -99,6 +99,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let dueDay: Int
         let category: ExpenseCategory
         let recurrence: ExpenseRecurrence
+        let customRecurrenceMonths: Int?
         let isActive: Bool
         let dueDate: Date?
         let settledDate: Date?
@@ -254,6 +255,7 @@ struct BackupService {
                     dueDay: $0.dueDay,
                     category: $0.category,
                     recurrence: $0.recurrence,
+                    customRecurrenceMonths: $0.customRecurrenceMonths,
                     isActive: $0.isActive,
                     dueDate: $0.dueDate,
                     settledDate: $0.settledDate,
@@ -365,6 +367,7 @@ struct BackupService {
                         dueDay: item.dueDay,
                         category: item.category,
                         recurrence: item.recurrence,
+                        customRecurrenceMonths: item.customRecurrenceMonths ?? 1,
                         isActive: item.isActive,
                         dueDate: item.dueDate,
                         settledDate: item.settledDate,

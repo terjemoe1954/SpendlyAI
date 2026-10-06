@@ -409,6 +409,15 @@ private extension SpendingCategory {
         case .health: "cross.case"
         case .bills: "doc.text"
         case .savings: "banknote"
+        case .subscriptions: "repeat"
+        case .insurance: "shield"
+        case .gifts: "gift"
+        case .home: "house"
+        case .income: "arrow.down.circle"
+        case .clothing: "tshirt"
+        case .communication: "phone"
+        case .withdrawals: "banknote"
+        case .developer: "hammer"
         case .other: "circle.grid.2x2"
         }
     }
@@ -417,6 +426,14 @@ private extension SpendingCategory {
 private extension ExpenseCategory {
     var activityTitleKey: LocalizedStringKey {
         switch self {
+        case .gifts: "category.gifts"
+        case .income: "category.income"
+        case .clothing: "category.clothing"
+        case .communication: "category.communication"
+        case .savings: "category.savings"
+        case .withdrawals: "category.withdrawals"
+        case .entertainment: "category.entertainment"
+        case .developer: "category.developer"
         case .housing: "expenseCategory.housing"
         case .utilities: "expenseCategory.utilities"
         case .insurance: "expenseCategory.insurance"
@@ -443,6 +460,14 @@ private extension ExpenseCategory {
         case .groceries: "basket"
         case .health: "cross.case"
         case .gambling: "dice"
+        case .gifts: "gift"
+        case .income: "arrow.down.circle"
+        case .clothing: "tshirt"
+        case .communication: "phone"
+        case .savings: "banknote"
+        case .withdrawals: "banknote"
+        case .entertainment: "ticket"
+        case .developer: "hammer"
         case .other: "doc.text"
         }
     }
@@ -455,7 +480,9 @@ private extension ExpenseRecurrence {
         case .biweekly: "expenseRecurrence.biweekly"
         case .monthly: "expenseRecurrence.monthly"
         case .quarterly: "expenseRecurrence.quarterly"
+        case .semiannual: "expenseRecurrence.semiannual"
         case .yearly: "expenseRecurrence.yearly"
+        case .custom: "expenseRecurrence.custom"
         }
     }
 }

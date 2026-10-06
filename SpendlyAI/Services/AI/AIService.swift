@@ -105,16 +105,52 @@ struct AIService {
 
     nonisolated func fallbackAnswer(for request: AIRequest, after error: AIServiceError? = nil) -> AIResponse {
         let context = request.budgetContext
+        let question = request.question.lowercased()
+        let locale = Locale.current
+        let remaining = MoneyFormatter.string(
+            from: context.remainingToday,
+            currencyCode: context.currencyCode,
+            locale: locale
+        )
+        let fixedExpenses = MoneyFormatter.string(
+            from: context.upcomingFixedExpenses,
+            currencyCode: context.currencyCode,
+            locale: locale
+        )
+        let savings = MoneyFormatter.string(
+            from: context.plannedSavings,
+            currencyCode: context.currencyCode,
+            locale: locale
+        )
+        let usesNorwegian = locale.language.languageCode?.identifier == "no"
+            || locale.language.languageCode?.identifier == "nb"
+            || locale.language.languageCode?.identifier == "nn"
 
-        if context.isBudgetUnderPressure {
-            return AIResponse(message: "ai.fallback.pressured")
+        if question.contains("mål") || question.contains("spare") || question.contains("goal") || question.contains("sav") {
+            let message = usesNorwegian
+                ? "Det er satt av \(savings) til sparemål før neste inntekt. Beløpet er allerede trukket fra det du trygt kan bruke."
+                : "\(savings) is reserved for savings goals before your next income. It is already deducted from what is safe to spend."
+            return AIResponse(message: message)
         }
 
-        if context.remainingToday < 0 {
-            return AIResponse(message: "ai.fallback.overspent")
+        if question.contains("lav") || question.contains("hvorfor") || question.contains("lower") || question.contains("why") {
+            let message = usesNorwegian
+                ? "Dagsbudsjettet tar høyde for \(fixedExpenses) i kommende faste utgifter, sparemål og bufferen din. Du har \(remaining) igjen å bruke i dag."
+                : "Your daily budget accounts for \(fixedExpenses) in upcoming fixed expenses, savings goals, and your buffer. You have \(remaining) left today."
+            return AIResponse(message: message)
         }
 
-        return AIResponse(message: "ai.fallback.steady")
+        if context.isBudgetUnderPressure || context.remainingToday < 0 {
+            let message = usesNorwegian
+                ? "Du har \(remaining) igjen i dagens budsjett. Budsjettet er presset, så nye kjøp vil redusere bufferen frem til neste inntekt."
+                : "You have \(remaining) left in today’s budget. The budget is under pressure, so new purchases will reduce your buffer until the next income."
+            return AIResponse(message: message)
+        }
+
+        let message = usesNorwegian
+            ? "Du har \(remaining) igjen å bruke i dag etter faste utgifter, sparemål og buffer."
+            : "You have \(remaining) left to spend today after fixed expenses, savings goals, and your buffer."
+        return AIResponse(message: message)
     }
 }
 

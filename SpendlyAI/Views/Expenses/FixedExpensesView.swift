@@ -334,6 +334,7 @@ struct FixedExpenseEditorView: View {
     @State private var dueDate: Date
     @State private var category: ExpenseCategory
     @State private var recurrence: ExpenseRecurrence
+    @State private var customRecurrenceMonths: Int
     @State private var isActive: Bool
     @State private var settledDate: Date
     @State private var paymentStatus: PaymentStatus
@@ -345,6 +346,7 @@ struct FixedExpenseEditorView: View {
         _dueDate = State(initialValue: Self.date(for: expense?.dueDay ?? Calendar.current.component(.day, from: .now)))
         _category = State(initialValue: expense?.category ?? .other)
         _recurrence = State(initialValue: expense?.recurrence ?? .monthly)
+        _customRecurrenceMonths = State(initialValue: expense?.customRecurrenceMonths ?? 1)
         _isActive = State(initialValue: expense?.isActive ?? true)
         _settledDate = State(initialValue: expense?.settledDate ?? .now)
         _paymentStatus = State(initialValue: expense?.paymentStatus ?? .pending)
@@ -392,6 +394,15 @@ struct FixedExpenseEditorView: View {
                         }
                     }
 
+                    if recurrence == .custom {
+                        LabeledContent("fixedExpenses.customMonths") {
+                            Stepper(value: $customRecurrenceMonths, in: 1...120) {
+                                Text(customRecurrenceMonths.formatted())
+                                    .monospacedDigit()
+                            }
+                        }
+                    }
+
                     Toggle("fixedExpenses.active", isOn: $isActive)
                 }
             }
@@ -426,6 +437,7 @@ struct FixedExpenseEditorView: View {
             expense.dueDay = dueDay
             expense.category = category
             expense.recurrence = recurrence
+            expense.customRecurrenceMonths = customRecurrenceMonths
             expense.isActive = isActive
             expense.dueDate = dueDate
             expense.settledDate = paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil
@@ -437,6 +449,7 @@ struct FixedExpenseEditorView: View {
                 dueDay: dueDay,
                 category: category,
                 recurrence: recurrence,
+                customRecurrenceMonths: customRecurrenceMonths,
                 isActive: isActive,
                 dueDate: dueDate,
                 settledDate: paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil,
@@ -458,17 +471,25 @@ struct FixedExpenseEditorView: View {
 private extension ExpenseCategory {
     var titleKey: LocalizedStringKey {
         switch self {
-        case .housing: "expenseCategory.housing"
-        case .utilities: "expenseCategory.utilities"
-        case .insurance: "expenseCategory.insurance"
-        case .transport: "expenseCategory.transport"
         case .subscriptions: "expenseCategory.subscriptions"
+        case .other: "expenseCategory.other"
+        case .groceries: "expenseCategory.groceries"
+        case .insurance: "expenseCategory.insurance"
+        case .gifts: "category.gifts"
+        case .health: "expenseCategory.health"
+        case .housing: "expenseCategory.housing"
+        case .income: "category.income"
+        case .clothing: "category.clothing"
+        case .communication: "category.communication"
+        case .gambling: "expenseCategory.gambling"
+        case .savings: "category.savings"
+        case .transport: "expenseCategory.transport"
+        case .withdrawals: "category.withdrawals"
+        case .entertainment: "category.entertainment"
+        case .developer: "category.developer"
+        case .utilities: "expenseCategory.utilities"
         case .debt: "expenseCategory.debt"
         case .childcare: "expenseCategory.childcare"
-        case .groceries: "expenseCategory.groceries"
-        case .health: "expenseCategory.health"
-        case .gambling: "expenseCategory.gambling"
-        case .other: "expenseCategory.other"
         }
     }
 }
@@ -476,11 +497,13 @@ private extension ExpenseCategory {
 private extension ExpenseRecurrence {
     var titleKey: LocalizedStringKey {
         switch self {
-        case .weekly: "expenseRecurrence.weekly"
-        case .biweekly: "expenseRecurrence.biweekly"
         case .monthly: "expenseRecurrence.monthly"
         case .quarterly: "expenseRecurrence.quarterly"
+        case .semiannual: "expenseRecurrence.semiannual"
         case .yearly: "expenseRecurrence.yearly"
+        case .custom: "expenseRecurrence.custom"
+        case .weekly: "expenseRecurrence.weekly"
+        case .biweekly: "expenseRecurrence.biweekly"
         }
     }
 }

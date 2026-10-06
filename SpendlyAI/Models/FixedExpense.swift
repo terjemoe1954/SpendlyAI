@@ -8,6 +8,7 @@ final class FixedExpense {
     var dueDay: Int
     var category: ExpenseCategory
     var recurrence: ExpenseRecurrence
+    var customRecurrenceMonths: Int = 1
     var isActive: Bool
     var dueDate: Date?
     var settledDate: Date?
@@ -28,6 +29,7 @@ final class FixedExpense {
         dueDay: Int,
         category: ExpenseCategory = .other,
         recurrence: ExpenseRecurrence = .monthly,
+        customRecurrenceMonths: Int = 1,
         isActive: Bool = true,
         dueDate: Date? = nil,
         settledDate: Date? = nil,
@@ -38,6 +40,7 @@ final class FixedExpense {
         self.dueDay = dueDay
         self.category = category
         self.recurrence = recurrence
+        self.customRecurrenceMonths = max(customRecurrenceMonths, 1)
         self.isActive = isActive
         self.dueDate = dueDate
         self.settledDate = settledDate

@@ -1,6 +1,21 @@
 import Foundation
 import UIKit
 
+enum ReportEntryKind {
+    case income
+    case expense
+}
+
+struct ReportPDFEntry {
+    let kind: ReportEntryKind
+    let date: Date
+    let title: String
+    let amount: Decimal
+    let status: String
+    let statusValue: PaymentStatus
+    let category: String
+}
+
 struct ReportPDFRequest {
     let appName: String
     let startDate: Date
@@ -8,6 +23,9 @@ struct ReportPDFRequest {
     let currencyCode: String
     let generatedAt: Date
     let summary: ReportSummary
+    let entries: [ReportPDFEntry]
+    let sortDescription: String
+    let statusDescription: String
 }
 
 @MainActor
@@ -20,7 +38,7 @@ struct ReportPDFGenerator {
     ) -> Data {
         let format = UIGraphicsPDFRendererFormat()
         format.documentInfo = [
-            kCGPDFContextTitle as String: request.appName + " – " + localized("Reports", locale: locale),
+            kCGPDFContextTitle as String: request.appName + " – " + localized("report.invoiceTitle", locale: locale),
             kCGPDFContextAuthor as String: request.appName
         ]
 
@@ -89,7 +107,7 @@ private final class ReportPDFCanvas {
             spacingAfter: 4
         )
         drawText(
-            localized("Reports"),
+            localized("report.invoiceTitle"),
             font: .boldSystemFont(ofSize: 34),
             color: .black,
             spacingAfter: 18
@@ -97,49 +115,103 @@ private final class ReportPDFCanvas {
 
         let period = dateString(request.startDate) + " – " + dateString(request.endDate)
         drawMetadata(label: localized("Period"), value: period)
-        drawMetadata(label: localized("Currency"), value: request.currencyCode)
-        drawMetadata(
-            label: localized("Generated"),
-            value: generatedDateString(request.generatedAt)
-        )
+        drawMetadata(label: localized("Generated"), value: generatedDateString(request.generatedAt))
+        drawMetadata(label: localized("report.sort"), value: request.sortDescription)
+        drawMetadata(label: localized("report.statusFilter"), value: request.statusDescription)
+        drawMetadata(label: localized("Entries"), value: String(request.entries.count))
+
+        cursorY += 14
+        drawEntryTable(request.entries)
 
         cursorY += 18
         drawSectionTitle(localized("Summary"))
-        drawAmountRow(localized("Income"), amount: request.summary.totalIncome, color: .systemGreen)
-        drawAmountRow(localized("Variable expenses"), amount: request.summary.totalVariableExpenses)
-        drawAmountRow(localized("Fixed expenses"), amount: request.summary.totalFixedExpenses, color: .systemOrange)
-        drawAmountRow(localized("Planned savings"), amount: request.summary.plannedSavings)
-        drawAmountRow(
-            localized("Net result"),
-            amount: request.summary.netResult,
-            color: request.summary.netResult < 0 ? .systemRed : .systemGreen
-        )
-        drawValueRow(localized("Entries"), value: String(request.summary.entryCount))
+        let receivedIncome = request.entries
+            .filter { $0.kind == .income && $0.statusValue == .settled }
+            .reduce(Decimal.zero) { $0 + $1.amount }
+        let pendingIncome = request.entries
+            .filter { $0.kind == .income && $0.statusValue != .settled }
+            .reduce(Decimal.zero) { $0 + $1.amount }
+        let paidExpenses = request.entries
+            .filter { $0.kind == .expense && ($0.statusValue == .settled || $0.statusValue == .withdrawn) }
+            .reduce(Decimal.zero) { $0 + $1.amount }
+        let unpaidExpenses = request.entries
+            .filter { $0.kind == .expense && $0.statusValue != .settled && $0.statusValue != .withdrawn }
+            .reduce(Decimal.zero) { $0 + $1.amount }
 
-        if !request.summary.variableExpenseCategories.isEmpty {
-            cursorY += 18
-            drawSectionTitle(localized("Variable expenses by category"))
-            for total in request.summary.variableExpenseCategories {
-                drawAmountRow(
-                    spendingCategoryTitle(total.category),
-                    amount: total.amount
-                )
-            }
-        }
-
-        if !request.summary.fixedExpenseCategories.isEmpty {
-            cursorY += 18
-            drawSectionTitle(localized("Fixed expenses by category"))
-            for total in request.summary.fixedExpenseCategories {
-                drawAmountRow(
-                    fixedExpenseCategoryTitle(total.category),
-                    amount: total.amount,
-                    color: .systemOrange
-                )
-            }
-        }
+        drawAmountRow(localized("report.incomeReceived"), amount: receivedIncome, color: .systemGreen)
+        drawAmountRow(localized("report.expensePaid"), amount: paidExpenses)
+        drawAmountRow(localized("report.incomePending"), amount: pendingIncome, color: .systemOrange)
+        drawAmountRow(localized("report.expenseUnpaid"), amount: unpaidExpenses, color: .systemOrange)
 
         drawFooter()
+    }
+
+    private func drawEntryTable(_ entries: [ReportPDFEntry]) {
+        drawEntryTableHeader()
+
+        for entry in entries {
+            ensureSpace(for: 25)
+            drawEntryRow(entry)
+        }
+    }
+
+    private func drawEntryTableHeader() {
+        ensureSpace(for: 28)
+        let columns = entryColumnRects(height: 20)
+        let titles = [
+            localized("Date"),
+            localized("Title"),
+            localized("Amount"),
+            localized("Status"),
+            localized("Category")
+        ]
+
+        UIColor(white: 0.93, alpha: 1).setFill()
+        UIRectFill(CGRect(x: margin, y: cursorY, width: contentWidth, height: 20))
+
+        for (title, rect) in zip(titles, columns) {
+            drawText(
+                title,
+                in: rect,
+                font: .boldSystemFont(ofSize: 8),
+                color: .darkGray,
+                alignment: title == localized("Amount") ? .right : .left
+            )
+        }
+        cursorY += 22
+        drawDivider()
+    }
+
+    private func drawEntryRow(_ entry: ReportPDFEntry) {
+        let columns = entryColumnRects(height: 18)
+        let values = [
+            dateString(entry.date),
+            entry.title,
+            MoneyFormatter.string(from: entry.amount, currencyCode: currencyCode, locale: locale),
+            entry.status,
+            entry.category
+        ]
+
+        for (index, value) in values.enumerated() {
+            drawText(
+                value,
+                in: columns[index],
+                font: .systemFont(ofSize: 8),
+                color: .black,
+                alignment: index == 2 ? .right : .left
+            )
+        }
+        cursorY += 20
+        drawDivider()
+    }
+
+    private func entryColumnRects(height: CGFloat) -> [CGRect] {
+        let widths: [CGFloat] = [60, 170, 88, 78, 99]
+        var x = margin
+        return widths.map { width in
+            defer { x += width }
+            return CGRect(x: x, y: cursorY, width: width - 5, height: height)
+        }
     }
 
     private func drawMetadata(label: String, value: String) {
@@ -313,6 +385,15 @@ private final class ReportPDFCanvas {
 
     private func spendingCategoryTitle(_ category: SpendingCategory) -> String {
         switch category {
+        case .subscriptions: localized("expenseCategory.subscriptions")
+        case .insurance: localized("expenseCategory.insurance")
+        case .gifts: localized("category.gifts")
+        case .home: localized("category.home")
+        case .income: localized("category.income")
+        case .clothing: localized("category.clothing")
+        case .communication: localized("category.communication")
+        case .withdrawals: localized("category.withdrawals")
+        case .developer: localized("category.developer")
         case .food: localized("category.food")
         case .groceries: localized("category.groceries")
         case .transport: localized("category.transport")
@@ -328,6 +409,14 @@ private final class ReportPDFCanvas {
 
     private func fixedExpenseCategoryTitle(_ category: ExpenseCategory) -> String {
         switch category {
+        case .gifts: localized("category.gifts")
+        case .income: localized("category.income")
+        case .clothing: localized("category.clothing")
+        case .communication: localized("category.communication")
+        case .savings: localized("category.savings")
+        case .withdrawals: localized("category.withdrawals")
+        case .entertainment: localized("category.entertainment")
+        case .developer: localized("category.developer")
         case .housing: localized("expenseCategory.housing")
         case .utilities: localized("expenseCategory.utilities")
         case .insurance: localized("expenseCategory.insurance")
