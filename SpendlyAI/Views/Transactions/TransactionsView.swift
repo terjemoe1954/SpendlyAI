@@ -19,28 +19,52 @@ struct TransactionsView: View {
     @State private var selectedIncome: Income?
     @State private var selectedFixedExpense: FixedExpense?
     @State private var activityFilter: ActivityFilter = .all
+    @State private var showsFilters = false
+    @State private var periodFilter: ActivityPeriodFilter = .all
+    @State private var statusFilter: PaymentStatus?
+    @State private var categoryFilter: ActivityCategory?
+    @State private var minimumAmount = ""
+    @State private var maximumAmount = ""
 
     private var currencyCode: String {
         profiles.first?.currencyCode ?? Locale.current.currency?.identifier ?? "NOK"
     }
 
     private var activityItems: [ActivityItem] {
+        let items: [ActivityItem]
         switch activityFilter {
         case .all:
-            return mergeActivities(
+            items = mergeActivities(
                 transactions: transactions,
                 incomes: incomes,
                 fixedExpenses: fixedExpenses
             )
         case .purchases:
-            return transactions.map(ActivityItem.purchase)
+            items = transactions.map(ActivityItem.purchase)
                 .sorted { $0.date > $1.date }
         case .incomes:
-            return incomes.map(ActivityItem.income)
+            items = incomes.map(ActivityItem.income)
                 .sorted { $0.date > $1.date }
         case .fixedExpenses:
-            return preparedFixedExpenseItems(fixedExpenses)
+            items = preparedFixedExpenseItems(fixedExpenses)
         }
+
+        let minimum = MoneyParser.decimal(from: minimumAmount)
+        let maximum = MoneyParser.decimal(from: maximumAmount)
+        return items.filter { item in
+            periodFilter.contains(item.date)
+                && (statusFilter == nil || item.paymentStatus == statusFilter)
+                && (categoryFilter == nil || item.category == categoryFilter)
+                && minimum.map { item.amount >= $0 } != false
+                && maximum.map { item.amount <= $0 } != false
+        }
+    }
+
+    private var hasActiveFilters: Bool {
+        periodFilter != .all || statusFilter != nil || categoryFilter != nil
+            || MoneyParser.decimal(from: minimumAmount) != nil
+            || MoneyParser.decimal(from: maximumAmount) != nil
+            || activityFilter != .all
     }
 
     var body: some View {
@@ -64,22 +88,28 @@ struct TransactionsView: View {
             }
             .navigationTitle("tab.transactions")
             .toolbar {
-                ToolbarItemGroup(placement: .topBarLeading) {
+                ToolbarOverflowMenu {
                     NavigationLink {
                         IncomesView()
                     } label: {
-                        Image(systemName: "banknote")
+                        Label("incomes.title", systemImage: "banknote")
                     }
-                    .accessibilityLabel("incomes.title")
 
-                    Menu {
-                        Picker("transactions.filter", selection: $activityFilter) {
-                            ForEach(ActivityFilter.allCases) { filter in
-                                Text(filter.titleKey).tag(filter)
-                            }
-                        }
+                    NavigationLink {
+                        StatisticsView()
                     } label: {
-                        Label("transactions.filter", systemImage: "line.3.horizontal.decrease.circle")
+                        Label("statistics.title", systemImage: "chart.bar.xaxis")
+                    }
+
+                    Button {
+                        showsFilters = true
+                    } label: {
+                        Label(
+                            "transactions.filter",
+                            systemImage: hasActiveFilters
+                                ? "line.3.horizontal.decrease.circle.fill"
+                                : "line.3.horizontal.decrease.circle"
+                        )
                     }
                 }
 
@@ -96,6 +126,16 @@ struct TransactionsView: View {
                     }
                     .accessibilityLabel("common.add")
                 }
+            }
+            .sheet(isPresented: $showsFilters) {
+                TransactionFilterView(
+                    activityFilter: $activityFilter,
+                    periodFilter: $periodFilter,
+                    statusFilter: $statusFilter,
+                    categoryFilter: $categoryFilter,
+                    minimumAmount: $minimumAmount,
+                    maximumAmount: $maximumAmount
+                )
             }
             .sheet(isPresented: $showsNewTransaction) {
                 TransactionEditorView()
@@ -279,6 +319,159 @@ struct TransactionsView: View {
     }
 }
 
+private struct TransactionFilterView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @Binding var activityFilter: ActivityFilter
+    @Binding var periodFilter: ActivityPeriodFilter
+    @Binding var statusFilter: PaymentStatus?
+    @Binding var categoryFilter: ActivityCategory?
+    @Binding var minimumAmount: String
+    @Binding var maximumAmount: String
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("filter.period") {
+                    Picker("filter.period", selection: $periodFilter) {
+                        ForEach(ActivityPeriodFilter.allCases) { period in
+                            Text(period.titleKey).tag(period)
+                        }
+                    }
+                }
+
+                Section("filter.status") {
+                    Picker("filter.status", selection: $statusFilter) {
+                        Text("filter.all").tag(nil as PaymentStatus?)
+                        ForEach(PaymentStatus.allCases, id: \.self) { status in
+                            Text(status.titleKey(for: .expense)).tag(status as PaymentStatus?)
+                        }
+                    }
+                }
+
+                Section("filter.type") {
+                    Picker("filter.type", selection: $activityFilter) {
+                        ForEach(ActivityFilter.allCases) { filter in
+                            Text(filter.titleKey).tag(filter)
+                        }
+                    }
+                }
+
+                Section("filter.category") {
+                    Picker("filter.category", selection: $categoryFilter) {
+                        Text("filter.allCategories").tag(nil as ActivityCategory?)
+                        ForEach(ActivityCategory.allCases) { category in
+                            Text(category.titleKey).tag(category as ActivityCategory?)
+                        }
+                    }
+                }
+
+                Section("filter.amount") {
+                    TextField("filter.minimumAmount", text: $minimumAmount)
+                    TextField("filter.maximumAmount", text: $maximumAmount)
+                }
+
+                Section {
+                    Button("filter.reset", role: .destructive) {
+                        activityFilter = .all
+                        periodFilter = .all
+                        statusFilter = nil
+                        categoryFilter = nil
+                        minimumAmount = ""
+                        maximumAmount = ""
+                    }
+                }
+            }
+            .navigationTitle("transactions.filter")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("common.done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private enum ActivityPeriodFilter: String, CaseIterable, Identifiable {
+    case all
+    case today
+    case thisMonth
+    case previousMonth
+    case thisYear
+
+    var id: Self { self }
+
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .all: "filter.period.all"
+        case .today: "filter.period.today"
+        case .thisMonth: "filter.period.thisMonth"
+        case .previousMonth: "filter.period.previousMonth"
+        case .thisYear: "filter.period.thisYear"
+        }
+    }
+
+    func contains(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> Bool {
+        switch self {
+        case .all:
+            true
+        case .today:
+            calendar.isDate(date, inSameDayAs: now)
+        case .thisMonth:
+            calendar.isDate(date, equalTo: now, toGranularity: .month)
+        case .previousMonth:
+            calendar.date(byAdding: .month, value: -1, to: now)
+                .map { calendar.isDate(date, equalTo: $0, toGranularity: .month) } ?? false
+        case .thisYear:
+            calendar.isDate(date, equalTo: now, toGranularity: .year)
+        }
+    }
+}
+
+private enum ActivityCategory: String, CaseIterable, Identifiable {
+    case subscriptions
+    case other
+    case groceries
+    case insurance
+    case gifts
+    case health
+    case home
+    case income
+    case clothing
+    case communication
+    case gambling
+    case savings
+    case transport
+    case withdrawals
+    case entertainment
+    case developer
+
+    var id: Self { self }
+
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .subscriptions: "expenseCategory.subscriptions"
+        case .other: "category.other"
+        case .groceries: "category.groceries"
+        case .insurance: "expenseCategory.insurance"
+        case .gifts: "category.gifts"
+        case .health: "category.health"
+        case .home: "category.home"
+        case .income: "category.income"
+        case .clothing: "category.clothing"
+        case .communication: "category.communication"
+        case .gambling: "category.gambling"
+        case .savings: "category.savings"
+        case .transport: "category.transport"
+        case .withdrawals: "category.withdrawals"
+        case .entertainment: "category.entertainment"
+        case .developer: "category.developer"
+        }
+    }
+}
+
 private enum ActivityFilter: String, CaseIterable, Identifiable {
     case all
     case purchases
@@ -329,6 +522,43 @@ private enum ActivityItem: Identifiable {
         case .purchase(let transaction): transaction.dueDate ?? transaction.date
         case .income(let income): income.dueDate ?? income.date
         case .fixedExpense(_, let dueDate): dueDate
+        }
+    }
+
+    var amount: Decimal {
+        switch self {
+        case .purchase(let transaction): transaction.amount
+        case .income(let income): income.amount
+        case .fixedExpense(let expense, _): expense.amount
+        }
+    }
+
+    var paymentStatus: PaymentStatus {
+        switch self {
+        case .purchase(let transaction): transaction.effectivePaymentStatus()
+        case .income(let income): income.effectivePaymentStatus()
+        case .fixedExpense(let expense, let dueDate):
+            expense.paymentStatus.effectiveStatus(dueDate: dueDate)
+        }
+    }
+
+    var category: ActivityCategory {
+        switch self {
+        case .purchase(let transaction):
+            switch transaction.category {
+            case .home, .bills: .home
+            case .food, .groceries: .groceries
+            case .shopping, .other: .other
+            default: ActivityCategory(rawValue: transaction.category.rawValue) ?? .other
+            }
+        case .income(let income):
+            ActivityCategory(rawValue: income.category.normalizedCategory.rawValue) ?? .income
+        case .fixedExpense(let expense, _):
+            switch expense.category {
+            case .housing, .utilities: .home
+            case .debt, .childcare, .other: .other
+            default: ActivityCategory(rawValue: expense.category.rawValue) ?? .other
+            }
         }
     }
 }

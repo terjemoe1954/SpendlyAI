@@ -172,8 +172,10 @@ struct BackupRestoreView: View {
     }
 
     private var defaultFilename: String {
-        let date = Date.now.formatted(.iso8601.year().month().day())
-        return "SpendlyAI-backup-\(date)"
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+        return "SpendlyAI-backup-\(formatter.string(from: .now))"
     }
 
     private func prepareExport() {

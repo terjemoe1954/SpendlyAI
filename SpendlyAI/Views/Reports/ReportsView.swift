@@ -478,14 +478,25 @@ struct ReportsView: View {
 
     private func incomeCategoryTitle(_ category: IncomeCategory) -> String {
         let key: String
-        switch category {
-        case .salary: key = "incomeCategory.salary"
-        case .freelance: key = "incomeCategory.freelance"
-        case .benefits: key = "incomeCategory.benefits"
-        case .investment: key = "incomeCategory.investment"
-        case .gift: key = "incomeCategory.gift"
-        case .refund: key = "incomeCategory.refund"
-        case .other: key = "incomeCategory.other"
+        switch category.normalizedCategory {
+        case .subscriptions: key = "category.subscriptions"
+        case .other: key = "category.other"
+        case .groceries: key = "category.groceries"
+        case .insurance: key = "category.insurance"
+        case .gifts: key = "category.gifts"
+        case .health: key = "category.health"
+        case .home: key = "category.home"
+        case .income: key = "category.income"
+        case .clothing: key = "category.clothing"
+        case .communication: key = "category.communication"
+        case .gambling: key = "category.gambling"
+        case .savings: key = "category.savings"
+        case .transport: key = "category.transport"
+        case .withdrawals: key = "category.withdrawals"
+        case .entertainment: key = "category.entertainment"
+        case .developer: key = "category.developer"
+        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+            key = "category.income"
         }
         return localizedString(key)
     }

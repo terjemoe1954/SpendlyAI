@@ -70,35 +70,91 @@ enum IncomeRecurrence: String, Codable, CaseIterable {
 }
 
 enum IncomeCategory: String, Codable, CaseIterable {
+    case subscriptions
+    case other
+    case groceries
+    case insurance
+    case gifts
+    case health
+    case home
+    case income
+    case clothing
+    case communication
+    case gambling
+    case savings
+    case transport
+    case withdrawals
+    case entertainment
+    case developer
+
+    // Retained so backups and existing data from earlier versions still decode.
     case salary
     case freelance
     case benefits
     case investment
     case gift
     case refund
-    case other
+
+    static var allCases: [IncomeCategory] {
+        [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .home,
+         .income, .clothing, .communication, .gambling, .savings, .transport,
+         .withdrawals, .entertainment, .developer]
+    }
+
+    var normalizedCategory: IncomeCategory {
+        switch self {
+        case .salary, .freelance, .benefits, .investment, .refund:
+            .income
+        case .gift:
+            .gifts
+        default:
+            self
+        }
+    }
 
     var titleKey: LocalizedStringKey {
-        switch self {
-        case .salary: "incomeCategory.salary"
-        case .freelance: "incomeCategory.freelance"
-        case .benefits: "incomeCategory.benefits"
-        case .investment: "incomeCategory.investment"
-        case .gift: "incomeCategory.gift"
-        case .refund: "incomeCategory.refund"
-        case .other: "incomeCategory.other"
+        switch normalizedCategory {
+        case .subscriptions: "expenseCategory.subscriptions"
+        case .other: "category.other"
+        case .groceries: "category.groceries"
+        case .insurance: "expenseCategory.insurance"
+        case .gifts: "category.gifts"
+        case .health: "category.health"
+        case .home: "category.home"
+        case .income: "category.income"
+        case .clothing: "category.clothing"
+        case .communication: "category.communication"
+        case .gambling: "category.gambling"
+        case .savings: "category.savings"
+        case .transport: "category.transport"
+        case .withdrawals: "category.withdrawals"
+        case .entertainment: "category.entertainment"
+        case .developer: "category.developer"
+        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+            "category.income"
         }
     }
 
     var systemImage: String {
-        switch self {
-        case .salary: "banknote"
-        case .freelance: "briefcase"
-        case .benefits: "building.columns"
-        case .investment: "chart.line.uptrend.xyaxis"
-        case .gift: "gift"
-        case .refund: "arrow.uturn.backward.circle"
-        case .other: "plus.circle"
+        switch normalizedCategory {
+        case .subscriptions: "repeat"
+        case .other: "circle.grid.2x2"
+        case .groceries: "basket"
+        case .insurance: "shield"
+        case .gifts: "gift"
+        case .health: "cross.case"
+        case .home: "house"
+        case .income: "arrow.down.circle"
+        case .clothing: "tshirt"
+        case .communication: "phone"
+        case .gambling: "dice"
+        case .savings: "banknote"
+        case .transport: "car"
+        case .withdrawals: "banknote"
+        case .entertainment: "ticket"
+        case .developer: "hammer"
+        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+            "arrow.down.circle"
         }
     }
 }

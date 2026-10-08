@@ -153,7 +153,7 @@ struct IncomeEditorView: View {
     init(income: Income?) {
         self.income = income
         _amount = State(initialValue: income?.amount.description ?? "")
-        _category = State(initialValue: income?.category ?? .salary)
+        _category = State(initialValue: income?.category.normalizedCategory ?? .income)
         _incomeDescription = State(initialValue: income?.incomeDescription ?? "")
         _notes = State(initialValue: income?.notes ?? "")
         _recurrence = State(initialValue: income?.recurrence ?? .oneTime)
