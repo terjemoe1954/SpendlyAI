@@ -57,6 +57,7 @@ struct TransactionsView: View {
                         items: activityItems,
                         currencyCode: currencyCode,
                         onSelect: select,
+                        onCopy: copy,
                         onDelete: delete
                     )
                 }
@@ -122,6 +123,58 @@ struct TransactionsView: View {
             selectedIncome = income
         case .fixedExpense(let expense, _):
             selectedFixedExpense = expense
+        }
+    }
+
+    private func copy(_ item: ActivityItem) {
+        switch item {
+        case .purchase(let transaction):
+            let copy = Transaction(
+                amount: transaction.amount,
+                date: transaction.date,
+                category: transaction.category,
+                transactionDescription: transaction.transactionDescription,
+                isEssential: transaction.isEssential,
+                notes: transaction.notes,
+                dueDate: transaction.dueDate,
+                settledDate: transaction.settledDate,
+                paymentStatus: transaction.paymentStatus
+            )
+            modelContext.insert(copy)
+            try? modelContext.save()
+            selectedTransaction = copy
+        case .income(let income):
+            let copy = Income(
+                amount: income.amount,
+                date: income.date,
+                category: income.category,
+                incomeDescription: income.incomeDescription,
+                notes: income.notes,
+                recurrence: income.recurrence,
+                isActive: income.isActive,
+                dueDate: income.dueDate,
+                settledDate: income.settledDate,
+                paymentStatus: income.paymentStatus
+            )
+            modelContext.insert(copy)
+            try? modelContext.save()
+            selectedIncome = copy
+        case .fixedExpense(let expense, _):
+            let copy = FixedExpense(
+                name: expense.name,
+                amount: expense.amount,
+                dueDay: expense.dueDay,
+                category: expense.category,
+                recurrence: expense.recurrence,
+                customRecurrenceMonths: expense.customRecurrenceMonths,
+                isActive: expense.isActive,
+                dueDate: expense.dueDate,
+                settledDate: expense.settledDate,
+                paymentStatus: expense.paymentStatus
+            )
+            modelContext.insert(copy)
+            try? modelContext.save()
+            selectedFixedExpense = copy
         }
     }
 
@@ -263,6 +316,14 @@ private enum ActivityItem: Identifiable {
         }
     }
 
+    var editTitleKey: LocalizedStringKey {
+        switch self {
+        case .purchase: "transaction.edit.title"
+        case .income: "income.edit"
+        case .fixedExpense: "fixedExpenses.edit"
+        }
+    }
+
     var date: Date {
         switch self {
         case .purchase(let transaction): transaction.dueDate ?? transaction.date
@@ -276,6 +337,7 @@ private struct ActivityList: View {
     let items: [ActivityItem]
     let currencyCode: String
     let onSelect: (ActivityItem) -> Void
+    let onCopy: (ActivityItem) -> Void
     let onDelete: (ActivityItem) -> Void
 
     var body: some View {
@@ -286,10 +348,28 @@ private struct ActivityList: View {
                 ActivityRow(item: item, currencyCode: currencyCode)
             }
             .buttonStyle(.plain)
-            .swipeActions(edge: .trailing) {
-                Button("common.delete", role: .destructive) {
-                    onDelete(item)
+            .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                Button {
+                    onSelect(item)
+                } label: {
+                    Label(item.editTitleKey, systemImage: "pencil")
                 }
+                .tint(.blue)
+
+                Button {
+                    onCopy(item)
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+                .tint(.orange)
+            }
+            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                Button(role: .destructive) {
+                    onDelete(item)
+                } label: {
+                    Label("common.delete", systemImage: "trash")
+                }
+                .tint(.red)
             }
         }
         .listStyle(.insetGrouped)

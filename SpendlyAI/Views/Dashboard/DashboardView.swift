@@ -158,7 +158,10 @@ struct DashboardView: View {
             Text("dashboard.upcomingExpenses")
                 .font(.headline)
 
-            let activeExpenses = fixedExpenses.filter(\.isActive).prefix(3)
+            let activeExpenses = fixedExpenses
+                .filter(\.isActive)
+                .sorted { nextDueDate(for: $0) < nextDueDate(for: $1) }
+                .prefix(3)
             if activeExpenses.isEmpty {
                 Text("dashboard.upcomingExpenses.empty")
                     .foregroundStyle(.secondary)
@@ -171,12 +174,9 @@ struct DashboardView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(expense.name)
                                 .font(.body.weight(.medium))
-                            HStack(spacing: 4) {
-                                Text("dashboard.dueDay")
-                                Text(expense.dueDay.formatted())
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                            Text(nextDueDate(for: expense), format: .dateTime.day().month(.wide).year())
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
 
                         Spacer()
@@ -258,6 +258,51 @@ struct DashboardView: View {
         .padding(AppSpacing.medium)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.background, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    private func nextDueDate(for expense: FixedExpense, from date: Date = .now) -> Date {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: date)
+        var occurrence = expense.dueDate.map { calendar.startOfDay(for: $0) }
+            ?? calendar.date(
+                bySetting: .day,
+                value: min(max(expense.dueDay, 1), 28),
+                of: today
+            )
+            ?? today
+
+        if expense.dueDate == nil, occurrence < today {
+            occurrence = calendar.date(byAdding: .month, value: 1, to: occurrence) ?? occurrence
+        }
+
+        while occurrence < today {
+            let nextDate: Date?
+            switch expense.recurrence {
+            case .weekly:
+                nextDate = calendar.date(byAdding: .day, value: 7, to: occurrence)
+            case .biweekly:
+                nextDate = calendar.date(byAdding: .day, value: 14, to: occurrence)
+            case .monthly:
+                nextDate = calendar.date(byAdding: .month, value: 1, to: occurrence)
+            case .quarterly:
+                nextDate = calendar.date(byAdding: .month, value: 3, to: occurrence)
+            case .semiannual:
+                nextDate = calendar.date(byAdding: .month, value: 6, to: occurrence)
+            case .yearly:
+                nextDate = calendar.date(byAdding: .year, value: 1, to: occurrence)
+            case .custom:
+                nextDate = calendar.date(
+                    byAdding: .month,
+                    value: max(expense.customRecurrenceMonths, 1),
+                    to: occurrence
+                )
+            }
+
+            guard let nextDate, nextDate > occurrence else { break }
+            occurrence = nextDate
+        }
+
+        return occurrence
     }
 
     private func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {

@@ -36,6 +36,7 @@ public struct BudgetInput {
 public struct BudgetFixedExpense {
     public let amount: Decimal
     public let dueDay: Int
+    let dueDate: Date?
     let recurrence: ExpenseRecurrence
     let customRecurrenceMonths: Int
     public let isActive: Bool
@@ -44,6 +45,7 @@ public struct BudgetFixedExpense {
         self.init(
             amount: amount,
             dueDay: dueDay,
+            dueDate: nil,
             recurrence: .monthly,
             customRecurrenceMonths: 1,
             isActive: isActive
@@ -53,12 +55,14 @@ public struct BudgetFixedExpense {
     init(
         amount: Decimal,
         dueDay: Int,
+        dueDate: Date? = nil,
         recurrence: ExpenseRecurrence,
         customRecurrenceMonths: Int = 1,
         isActive: Bool = true
     ) {
         self.amount = amount
         self.dueDay = dueDay
+        self.dueDate = dueDate
         self.recurrence = recurrence
         self.customRecurrenceMonths = max(customRecurrenceMonths, 1)
         self.isActive = isActive
@@ -80,10 +84,12 @@ public struct BudgetSavingsGoal {
 public struct BudgetTransaction {
     public let amount: Decimal
     public let date: Date
+    public let isSettled: Bool
 
-    public init(amount: Decimal, date: Date) {
+    public init(amount: Decimal, date: Date, isSettled: Bool = true) {
         self.amount = amount
         self.date = date
+        self.isSettled = isSettled
     }
 }
 
@@ -118,7 +124,16 @@ public struct BudgetService {
         )
         let plannedSavings = sumPlannedSavings(input.savingsGoals, through: normalizedNextIncomeDate)
         let spentToday = sumSpentToday(input.transactions, today: normalizedToday)
-        let disposableAmount = input.availableMoney - upcomingFixedExpenses - plannedSavings - input.minimumBuffer
+        let spentBeforeToday = sumSpentBeforeToday(
+            input.transactions,
+            from: calendar.startOfDay(for: input.periodStart),
+            through: normalizedToday
+        )
+        let disposableAmount = input.availableMoney
+            - spentBeforeToday
+            - upcomingFixedExpenses
+            - plannedSavings
+            - input.minimumBuffer
         let recommendedDailyMaximum = disposableAmount / Decimal(daysRemaining)
         let remainingSafeAmountToday = recommendedDailyMaximum - spentToday
 
@@ -143,7 +158,7 @@ public struct BudgetService {
     ) -> Decimal {
         expenses.reduce(0) { total, expense in
             guard expense.isActive,
-                  var dueDate = nextDueDate(forDay: expense.dueDay, from: startDate),
+                  var dueDate = firstOccurrence(for: expense, onOrAfter: startDate),
                   dueDate <= endDate else {
                 return total
             }
@@ -170,11 +185,45 @@ public struct BudgetService {
         }
     }
 
-    private func sumSpentToday(_ transactions: [BudgetTransaction], today: Date) -> Decimal {
+    private func sumSpentBeforeToday(
+        _ transactions: [BudgetTransaction],
+        from startDate: Date,
+        through today: Date
+    ) -> Decimal {
         transactions.reduce(0) { total, transaction in
-            guard calendar.isDate(transaction.date, inSameDayAs: today) else { return total }
+            let transactionDate = calendar.startOfDay(for: transaction.date)
+            guard transaction.isSettled,
+                  transactionDate >= startDate,
+                  transactionDate < today else { return total }
             return total + transaction.amount
         }
+    }
+
+    private func sumSpentToday(_ transactions: [BudgetTransaction], today: Date) -> Decimal {
+        transactions.reduce(0) { total, transaction in
+            guard transaction.isSettled,
+                  calendar.isDate(transaction.date, inSameDayAs: today) else { return total }
+            return total + transaction.amount
+        }
+    }
+
+    private func firstOccurrence(for expense: BudgetFixedExpense, onOrAfter date: Date) -> Date? {
+        let startDate = calendar.startOfDay(for: date)
+        guard var occurrence = expense.dueDate.map({ calendar.startOfDay(for: $0) }) else {
+            return nextDueDate(forDay: expense.dueDay, from: startDate)
+        }
+
+        while occurrence < startDate {
+            guard let nextDate = nextDueDate(
+                after: occurrence,
+                recurrence: expense.recurrence,
+                customMonths: expense.customRecurrenceMonths
+            ), nextDate > occurrence else {
+                return nil
+            }
+            occurrence = nextDate
+        }
+        return occurrence
     }
 
     private func nextDueDate(forDay day: Int, from date: Date) -> Date? {
@@ -236,6 +285,7 @@ extension BudgetService {
                 BudgetFixedExpense(
                     amount: expense.amount,
                     dueDay: expense.dueDay,
+                    dueDate: expense.dueDate,
                     recurrence: expense.recurrence,
                     customRecurrenceMonths: expense.customRecurrenceMonths,
                     isActive: expense.isActive
@@ -249,7 +299,12 @@ extension BudgetService {
                 )
             },
             transactions: transactions.map { transaction in
-                BudgetTransaction(amount: transaction.amount, date: transaction.date)
+                BudgetTransaction(
+                    amount: transaction.amount,
+                    date: transaction.settledDate ?? transaction.date,
+                    isSettled: transaction.paymentStatus == .settled
+                        || transaction.paymentStatus == .withdrawn
+                )
             },
             minimumBuffer: profile.minimumBuffer
         )
@@ -265,8 +320,12 @@ extension BudgetService {
         guard normalizedEndDate >= normalizedPeriodStart else { return 0 }
 
         return incomes.reduce(0) { total, income in
-            guard income.isActive, income.category != .salary else { return total }
-            let normalizedIncomeDate = calendar.startOfDay(for: income.date)
+            guard income.isActive,
+                  income.category != .salary,
+                  income.paymentStatus == .settled || income.paymentStatus == .withdrawn else {
+                return total
+            }
+            let normalizedIncomeDate = calendar.startOfDay(for: income.settledDate ?? income.date)
 
             if income.recurrence == .oneTime {
                 guard normalizedIncomeDate >= normalizedPeriodStart,

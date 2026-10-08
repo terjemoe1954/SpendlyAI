@@ -47,11 +47,29 @@ struct FixedExpensesView: View {
                         FixedExpenseRow(expense: expense, currencyCode: currencyCode)
                     }
                     .buttonStyle(.plain)
-                    .swipeActions(edge: .trailing) {
-                        Button("common.delete", role: .destructive) {
+                    .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                        Button {
+                            editorState = FixedExpenseEditorState(expense: expense)
+                        } label: {
+                            Label("fixedExpenses.edit", systemImage: "pencil")
+                        }
+                        .tint(.blue)
+
+                        Button {
+                            copy(expense)
+                        } label: {
+                            Label("Copy", systemImage: "doc.on.doc")
+                        }
+                        .tint(.orange)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
                             modelContext.delete(expense)
                             try? modelContext.save()
+                        } label: {
+                            Label("common.delete", systemImage: "trash")
                         }
+                        .tint(.red)
                     }
                 }
             }
@@ -96,6 +114,24 @@ struct FixedExpensesView: View {
         statusFilter = .all
         categoryFilter = nil
         recurrenceFilter = nil
+    }
+
+    private func copy(_ expense: FixedExpense) {
+        let copy = FixedExpense(
+            name: expense.name,
+            amount: expense.amount,
+            dueDay: expense.dueDay,
+            category: expense.category,
+            recurrence: expense.recurrence,
+            customRecurrenceMonths: expense.customRecurrenceMonths,
+            isActive: expense.isActive,
+            dueDate: expense.dueDate,
+            settledDate: expense.settledDate,
+            paymentStatus: expense.paymentStatus
+        )
+        modelContext.insert(copy)
+        try? modelContext.save()
+        editorState = FixedExpenseEditorState(expense: copy)
     }
 }
 
@@ -278,9 +314,15 @@ private struct FixedExpenseRow: View {
                 Text(expense.name)
                     .font(.headline)
 
-                Text("fixedExpenses.dueDay \(expense.dueDay)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if let dueDate = expense.dueDate {
+                    Text(dueDate, format: .dateTime.day().month(.wide).year())
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("fixedExpenses.dueDay \(expense.dueDay)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
 
                 HStack(spacing: 4) {
                     Text(expense.category.titleKey)

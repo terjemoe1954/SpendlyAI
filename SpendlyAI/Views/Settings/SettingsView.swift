@@ -5,6 +5,7 @@
 
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct SettingsView: View {
     @Query private var profiles: [UserFinancialProfile]
@@ -12,6 +13,8 @@ struct SettingsView: View {
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var transactions: [Transaction]
     @Query private var incomes: [Income]
+
+    @Environment(\.openURL) private var openURL
 
     @AppStorage(AppAppearance.storageKey) private var selectedAppearance = AppAppearance.system.rawValue
     @AppStorage(NotificationSettingsStorage.dailyReminderEnabledKey) private var dailyReminderEnabled = false
@@ -42,6 +45,7 @@ struct SettingsView: View {
                 profileSection
                 notificationSection
                 appearanceSection
+                languageSection
                 appInformationSection
             }
             .navigationTitle("tab.settings")
@@ -137,6 +141,23 @@ struct SettingsView: View {
                 }
             }
             .pickerStyle(.segmented)
+        }
+    }
+
+    private var languageSection: some View {
+        Section {
+            Button {
+                guard let settingsURL = URL(string: UIApplication.openSettingsURLString) else {
+                    return
+                }
+                openURL(settingsURL)
+            } label: {
+                Label("Choose app language", systemImage: "globe")
+            }
+        } header: {
+            Text("Language")
+        } footer: {
+            Text("Choose the language for SpendlyAI in the iPhone or iPad Settings app.")
         }
     }
 
