@@ -51,15 +51,6 @@ struct ReportSummaryService {
         let matchingIncomes = incomes.filter {
             $0.date >= lowerBound && $0.date < upperBound
         }
-        let profileIncome = profile.map {
-            summarizeProfileIncome(
-                $0,
-                registeredIncomes: matchingIncomes,
-                from: lowerBound,
-                through: endDay,
-                calendar: calendar
-            )
-        } ?? (total: Decimal.zero, count: 0)
         let fixedExpenseSummary = summarizeFixedExpenses(
             fixedExpenses,
             from: lowerBound,
@@ -86,54 +77,17 @@ struct ReportSummaryService {
         }
 
         return ReportSummary(
-            totalIncome: matchingIncomes.reduce(Decimal.zero) { $0 + $1.amount } + profileIncome.total,
+            totalIncome: matchingIncomes.reduce(Decimal.zero) { $0 + $1.amount },
             totalVariableExpenses: matchingTransactions.reduce(Decimal.zero) { $0 + $1.amount },
             totalFixedExpenses: fixedExpenseSummary.total,
             plannedSavings: plannedSavings,
             entryCount: matchingTransactions.count
                 + matchingIncomes.count
-                + profileIncome.count
                 + fixedExpenseSummary.occurrenceCount
                 + matchingGoals.count,
             variableExpenseCategories: variableExpenseCategories,
             fixedExpenseCategories: fixedExpenseCategories
         )
-    }
-
-    private func summarizeProfileIncome(
-        _ profile: UserFinancialProfile,
-        registeredIncomes: [Income],
-        from startDate: Date,
-        through endDate: Date,
-        calendar: Calendar
-    ) -> (total: Decimal, count: Int) {
-        guard profile.monthlyNetIncome > 0,
-              var incomeDate = firstDueDate(
-                forDay: profile.paydayDay,
-                from: startDate,
-                calendar: calendar
-              ) else {
-            return (.zero, 0)
-        }
-
-        var total = Decimal.zero
-        var count = 0
-        while incomeDate <= endDate {
-            let isAlreadyRegistered = registeredIncomes.contains { income in
-                income.category == .salary
-                    && calendar.isDate(income.dueDate ?? income.date, inSameDayAs: incomeDate)
-            }
-            if !isAlreadyRegistered {
-                total += profile.monthlyNetIncome
-                count += 1
-            }
-
-            guard let nextDate = calendar.date(byAdding: .month, value: 1, to: incomeDate) else {
-                break
-            }
-            incomeDate = nextDate
-        }
-        return (total, count)
     }
 
     private func summarizeFixedExpenses(

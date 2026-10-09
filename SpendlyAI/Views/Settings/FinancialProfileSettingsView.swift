@@ -8,12 +8,9 @@ import SwiftUI
 
 struct FinancialProfileSettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var profiles: [UserFinancialProfile]
+    @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
     @Query private var savingsGoals: [SavingsGoal]
 
-    @State private var monthlyNetIncome = ""
-    @State private var nextPayday = Date.now
-    @State private var minimumBuffer = ""
     @State private var selectedCurrencyCode = "NOK"
     @State private var savingsGoalName = ""
     @State private var savingsGoalAmount = ""
@@ -23,14 +20,9 @@ struct FinancialProfileSettingsView: View {
 
     private let currencyCodes = ["NOK", "USD", "EUR", "THB"]
 
-    private var canSave: Bool {
-        decimalValue(from: monthlyNetIncome) != nil && decimalValue(from: minimumBuffer) != nil
-    }
-
     var body: some View {
         Form {
-            incomeSection
-            bufferSection
+            currencySection
             goalSection
         }
         .navigationTitle("settings.profile")
@@ -39,7 +31,6 @@ struct FinancialProfileSettingsView: View {
                 Button("settings.profile.save") {
                     saveChanges()
                 }
-                .disabled(!canSave)
             }
         }
         .task {
@@ -63,26 +54,14 @@ struct FinancialProfileSettingsView: View {
         }
     }
 
-    private var incomeSection: some View {
-        Section("onboarding.income.section") {
-            TextField("onboarding.monthlyIncome", text: $monthlyNetIncome)
-                .keyboardType(.decimalPad)
-
-            DatePicker("onboarding.nextPayday", selection: $nextPayday, displayedComponents: .date)
-
+    private var currencySection: some View {
+        Section {
             Picker("onboarding.currency", selection: $selectedCurrencyCode) {
                 ForEach(currencyCodes, id: \.self) { currencyCode in
                     Text(currencyCode)
                         .tag(currencyCode)
                 }
             }
-        }
-    }
-
-    private var bufferSection: some View {
-        Section("onboarding.buffer.section") {
-            TextField("onboarding.minimumBuffer", text: $minimumBuffer)
-                .keyboardType(.decimalPad)
         }
     }
 
@@ -100,9 +79,6 @@ struct FinancialProfileSettingsView: View {
         didLoadProfile = true
 
         if let profile = profiles.first {
-            monthlyNetIncome = profile.monthlyNetIncome.description
-            nextPayday = profile.budgetPeriodEnd
-            minimumBuffer = profile.minimumBuffer.description
             selectedCurrencyCode = profile.currencyCode
         }
 
@@ -114,12 +90,6 @@ struct FinancialProfileSettingsView: View {
     }
 
     private func saveChanges() {
-        guard let income = decimalValue(from: monthlyNetIncome),
-              let buffer = decimalValue(from: minimumBuffer) else {
-            return
-        }
-
-        let calendar = Calendar.current
         let now = Date.now
         let profile = profiles.first ?? UserFinancialProfile()
 
@@ -128,12 +98,11 @@ struct FinancialProfileSettingsView: View {
             profile.createdAt = now
         }
 
-        profile.monthlyNetIncome = income
-        profile.paydayDay = calendar.component(.day, from: nextPayday)
+        profile.monthlyNetIncome = 0
         profile.budgetPeriodStart = now
-        profile.budgetPeriodEnd = nextPayday
+        profile.budgetPeriodEnd = now
         profile.currencyCode = selectedCurrencyCode
-        profile.minimumBuffer = buffer
+        profile.minimumBuffer = 0
         profile.updatedAt = now
 
         for savingsGoal in savingsGoals {

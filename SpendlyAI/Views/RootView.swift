@@ -8,7 +8,8 @@ import SwiftUI
 
 struct RootView: View {
     @AppStorage(AppAppearance.storageKey) private var selectedAppearance = AppAppearance.system.rawValue
-    @Query private var profiles: [UserFinancialProfile]
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
     var body: some View {
         Group {
@@ -19,6 +20,18 @@ struct RootView: View {
             }
         }
         .preferredColorScheme(AppAppearance(rawValue: selectedAppearance)?.colorScheme)
+        .task(id: profiles.first?.persistentModelID) {
+            removeLegacyProfileAmounts()
+        }
+    }
+
+    private func removeLegacyProfileAmounts() {
+        guard let profile = profiles.first,
+              profile.monthlyNetIncome != 0 || profile.minimumBuffer != 0 else { return }
+        profile.monthlyNetIncome = 0
+        profile.minimumBuffer = 0
+        profile.updatedAt = .now
+        try? modelContext.save()
     }
 }
 

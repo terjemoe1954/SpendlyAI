@@ -11,7 +11,7 @@ struct TransactionsView: View {
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @Query(sort: \Income.date, order: .reverse) private var incomes: [Income]
     @Query private var fixedExpenses: [FixedExpense]
-    @Query private var profiles: [UserFinancialProfile]
+    @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
     @State private var showsNewTransaction = false
     @State private var showsNewIncome = false
@@ -41,10 +41,10 @@ struct TransactionsView: View {
             )
         case .purchases:
             items = transactions.map(ActivityItem.purchase)
-                .sorted { $0.date > $1.date }
+                .sorted { $0.date < $1.date }
         case .incomes:
             items = incomes.map(ActivityItem.income)
-                .sorted { $0.date > $1.date }
+                .sorted { $0.date < $1.date }
         case .fixedExpenses:
             items = preparedFixedExpenseItems(fixedExpenses)
         }
@@ -240,7 +240,7 @@ struct TransactionsView: View {
         let fixedExpenseItems = preparedFixedExpenseItems(fixedExpenses)
 
         return (recordedItems + fixedExpenseItems)
-            .sorted { $0.date > $1.date }
+            .sorted { $0.date < $1.date }
     }
 
     private func preparedFixedExpenseItems(_ expenses: [FixedExpense]) -> [ActivityItem] {
@@ -250,7 +250,7 @@ struct TransactionsView: View {
             }
             return .fixedExpense(expense, dueDate: dueDate)
         }
-        .sorted { $0.date > $1.date }
+        .sorted { $0.date < $1.date }
     }
 
     private func nextDueDate(for expense: FixedExpense, from date: Date = .now) -> Date? {

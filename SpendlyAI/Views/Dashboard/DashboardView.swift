@@ -1,19 +1,21 @@
-//
-//   DashboardView.swift
-//   SpendlyAI
-//
-
 import SwiftData
 import SwiftUI
 
 struct DashboardView: View {
-    @Query private var profiles: [UserFinancialProfile]
+    @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var transactions: [Transaction]
     @Query private var incomes: [Income]
 
     @State private var showsNewTransaction = false
+    @State private var selectedPeriod: DashboardPeriod = .thisMonth
+    @State private var customStartDate = Calendar.current.date(
+        byAdding: .month,
+        value: -1,
+        to: .now
+    ) ?? .now
+    @State private var customEndDate = Date.now
 
     private let budgetService = BudgetService()
     private let dailyInsightService = DailyInsightService()
@@ -22,16 +24,35 @@ struct DashboardView: View {
         profiles.first
     }
 
+    private var currencyCode: String {
+        profile?.currencyCode ?? Locale.current.currency?.identifier ?? "NOK"
+    }
+
+    private var selectedInterval: DateInterval {
+        selectedPeriod.interval(
+            customStartDate: customStartDate,
+            customEndDate: customEndDate
+        )
+    }
+
+    private var summary: DashboardPeriodSummary {
+        DashboardSummaryCalculator().summary(
+            transactions: transactions,
+            incomes: incomes,
+            fixedExpenses: fixedExpenses,
+            interval: selectedInterval
+        )
+    }
+
     private var budgetResult: BudgetResult? {
         guard let profile else { return nil }
-        let input = budgetService.makeInput(
+        return budgetService.calculateBudget(for: budgetService.makeInput(
             profile: profile,
             fixedExpenses: fixedExpenses,
             savingsGoals: savingsGoals,
             transactions: transactions,
             incomes: incomes
-        )
-        return budgetService.calculateBudget(for: input)
+        ))
     }
 
     private var primarySavingsGoal: SavingsGoal? {
@@ -47,18 +68,18 @@ struct DashboardView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: AppSpacing.large) {
+                    periodSection
+                    metricsGrid
+                    upcomingExpensesSection
+                    savingsGoalSection
                     if let profile, let budgetResult {
-                        safeToSpendCard(profile: profile, budgetResult: budgetResult)
-                        metricsGrid(budgetResult: budgetResult, currencyCode: profile.currencyCode)
-                        upcomingExpensesSection(currencyCode: profile.currencyCode)
-                        savingsGoalSection(currencyCode: profile.currencyCode)
                         insightSection(profile: profile, budgetResult: budgetResult)
                     }
                 }
                 .padding(AppSpacing.large)
             }
             .background(AppStyle.screenBackground)
-            .navigationTitle("tab.home")
+            .navigationTitle("Spendly AI")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -89,71 +110,99 @@ struct DashboardView: View {
         }
     }
 
-    private func safeToSpendCard(profile: UserFinancialProfile, budgetResult: BudgetResult) -> some View {
-        VStack(alignment: .leading, spacing: AppSpacing.large) {
-            VStack(alignment: .leading, spacing: AppSpacing.small) {
-                Text("dashboard.safeToSpend.title")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.secondary)
+    private var periodSection: some View {
+        VStack(alignment: .leading, spacing: AppSpacing.medium) {
+            HStack {
+                Label("dashboard.period", systemImage: "calendar")
+                    .font(.headline)
 
-                Text(formattedCurrency(budgetResult.recommendedDailyMaximum, currencyCode: profile.currencyCode))
-                    .font(.system(.largeTitle, design: .rounded).bold())
-                    .contentTransition(.numericText())
+                Spacer()
 
-                Text("dashboard.safeToSpend.subtitle")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
+                Picker("dashboard.period", selection: $selectedPeriod) {
+                    ForEach(DashboardPeriod.allCases) { period in
+                        Text(period.titleKey).tag(period)
+                    }
+                }
+                .pickerStyle(.menu)
             }
 
-            Gauge(
-                value: gaugeValue(for: budgetResult),
-                in: 0...1
-            ) {
-                Text("dashboard.gauge.label")
-            } currentValueLabel: {
-                Text(formattedCurrency(max(budgetResult.remainingSafeAmountToday, 0), currencyCode: profile.currencyCode))
+            if selectedPeriod == .custom {
+                DatePicker(
+                    "filter.from",
+                    selection: $customStartDate,
+                    in: ...customEndDate,
+                    displayedComponents: .date
+                )
+                DatePicker(
+                    "filter.to",
+                    selection: $customEndDate,
+                    in: customStartDate...,
+                    displayedComponents: .date
+                )
             }
-            .gaugeStyle(.accessoryCircularCapacity)
-            .tint(budgetResult.isNegativeBudget ? .red : AppStyle.accentColor)
-            .frame(maxWidth: .infinity)
 
-            if budgetResult.isNegativeBudget {
-                Label("dashboard.warning", systemImage: "exclamationmark.triangle.fill")
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.red)
+            HStack(spacing: 4) {
+                Text(selectedInterval.start, format: .dateTime.day().month(.wide).year())
+                Text(verbatim: "–")
+                Text(
+                    selectedInterval.end.addingTimeInterval(-1),
+                    format: .dateTime.day().month(.wide).year()
+                )
             }
+            .font(.caption)
+            .foregroundStyle(.secondary)
         }
-        .padding(AppSpacing.large)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppSpacing.medium)
         .background(.background, in: RoundedRectangle(cornerRadius: 8))
     }
 
-    private func metricsGrid(budgetResult: BudgetResult, currencyCode: String) -> some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AppSpacing.medium) {
+    private var metricsGrid: some View {
+        LazyVGrid(
+            columns: [GridItem(.flexible()), GridItem(.flexible())],
+            spacing: AppSpacing.medium
+        ) {
             DashboardMetricView(
-                titleKey: "dashboard.spentToday",
-                value: formattedCurrency(budgetResult.spentToday, currencyCode: currencyCode),
-                systemImage: "cart"
+                titleKey: "statistics.income",
+                value: formattedCurrency(summary.totalIncome),
+                systemImage: "arrow.down.circle",
+                color: AppStyle.accentColor
             )
             DashboardMetricView(
-                titleKey: "dashboard.leftToday",
-                value: formattedCurrency(budgetResult.remainingSafeAmountToday, currencyCode: currencyCode),
-                systemImage: "wallet.pass"
+                titleKey: "statistics.expenses",
+                value: formattedCurrency(summary.totalExpenses),
+                systemImage: "arrow.up.circle",
+                color: .red
+            )
+            DashboardMetricView(
+                titleKey: "dashboard.receivable",
+                value: formattedCurrency(summary.receivableIncome),
+                systemImage: "clock.arrow.circlepath",
+                color: .orange
+            )
+            DashboardMetricView(
+                titleKey: "statistics.net",
+                value: formattedCurrency(summary.totalIncome - summary.totalExpenses),
+                systemImage: "equal.circle",
+                color: summary.totalIncome >= summary.totalExpenses
+                    ? AppStyle.accentColor
+                    : .red
             )
             DashboardMetricView(
                 titleKey: "dashboard.daysToIncome",
-                value: budgetResult.daysRemaining.formatted(),
-                systemImage: "calendar"
+                value: summary.daysUntilNextIncome.formatted(),
+                systemImage: "calendar",
+                color: AppStyle.accentColor
             )
             DashboardMetricView(
-                titleKey: "dashboard.fixedExpensesTotal",
-                value: formattedCurrency(budgetResult.upcomingFixedExpenses, currencyCode: currencyCode),
-                systemImage: "doc.text"
+                titleKey: "dashboard.entryCount",
+                value: summary.entryCount.formatted(),
+                systemImage: "list.number",
+                color: AppStyle.accentColor
             )
         }
     }
 
-    private func upcomingExpensesSection(currencyCode: String) -> some View {
+    private var upcomingExpensesSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             Text("dashboard.upcomingExpenses")
                 .font(.headline)
@@ -162,6 +211,7 @@ struct DashboardView: View {
                 .filter(\.isActive)
                 .sorted { nextDueDate(for: $0) < nextDueDate(for: $1) }
                 .prefix(3)
+
             if activeExpenses.isEmpty {
                 Text("dashboard.upcomingExpenses.empty")
                     .foregroundStyle(.secondary)
@@ -178,10 +228,8 @@ struct DashboardView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
-
                         Spacer()
-
-                        Text(formattedCurrency(expense.amount, currencyCode: currencyCode))
+                        Text(formattedCurrency(expense.amount))
                             .font(.body.weight(.semibold))
                     }
                     .padding(AppSpacing.medium)
@@ -199,7 +247,7 @@ struct DashboardView: View {
         }
     }
 
-    private func savingsGoalSection(currencyCode: String) -> some View {
+    private var savingsGoalSection: some View {
         VStack(alignment: .leading, spacing: AppSpacing.medium) {
             Text("dashboard.primaryGoal")
                 .font(.headline)
@@ -209,17 +257,13 @@ struct DashboardView: View {
                     HStack {
                         Text(primarySavingsGoal.name)
                             .font(.body.weight(.medium))
-
                         Spacer()
-
-                        Text(formattedCurrency(primarySavingsGoal.savedAmount, currencyCode: currencyCode))
+                        Text(formattedCurrency(primarySavingsGoal.savedAmount))
                             .foregroundStyle(.secondary)
                     }
-
                     ProgressView(value: savingsProgress(for: primarySavingsGoal))
                         .tint(AppStyle.accentColor)
-
-                    Text(formattedCurrency(primarySavingsGoal.targetAmount, currencyCode: currencyCode))
+                    Text(formattedCurrency(primarySavingsGoal.targetAmount))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -251,7 +295,6 @@ struct DashboardView: View {
         return VStack(alignment: .leading, spacing: AppSpacing.small) {
             Label("dashboard.insight.title", systemImage: "sparkles")
                 .font(.headline)
-
             Text(verbatim: insight.message)
                 .foregroundStyle(.secondary)
         }
@@ -276,50 +319,300 @@ struct DashboardView: View {
         }
 
         while occurrence < today {
-            let nextDate: Date?
-            switch expense.recurrence {
-            case .weekly:
-                nextDate = calendar.date(byAdding: .day, value: 7, to: occurrence)
-            case .biweekly:
-                nextDate = calendar.date(byAdding: .day, value: 14, to: occurrence)
-            case .monthly:
-                nextDate = calendar.date(byAdding: .month, value: 1, to: occurrence)
-            case .quarterly:
-                nextDate = calendar.date(byAdding: .month, value: 3, to: occurrence)
-            case .semiannual:
-                nextDate = calendar.date(byAdding: .month, value: 6, to: occurrence)
-            case .yearly:
-                nextDate = calendar.date(byAdding: .year, value: 1, to: occurrence)
-            case .custom:
-                nextDate = calendar.date(
-                    byAdding: .month,
-                    value: max(expense.customRecurrenceMonths, 1),
-                    to: occurrence
-                )
-            }
-
-            guard let nextDate, nextDate > occurrence else { break }
-            occurrence = nextDate
+            guard let next = DashboardSummaryCalculator(calendar: calendar).nextExpenseDate(
+                after: occurrence,
+                expense: expense
+            ), next > occurrence else { break }
+            occurrence = next
         }
-
         return occurrence
-    }
-
-    private func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {
-        MoneyFormatter.string(from: amount, currencyCode: currencyCode)
     }
 
     private func savingsProgress(for goal: SavingsGoal) -> Double {
         guard goal.targetAmount > 0 else { return 0 }
-        let progress = (goal.savedAmount as NSDecimalNumber).doubleValue / (goal.targetAmount as NSDecimalNumber).doubleValue
-        return min(max(progress, 0), 1)
+        let saved = (goal.savedAmount as NSDecimalNumber).doubleValue
+        let target = (goal.targetAmount as NSDecimalNumber).doubleValue
+        return min(max(saved / target, 0), 1)
     }
 
-    private func gaugeValue(for budgetResult: BudgetResult) -> Double {
-        guard budgetResult.recommendedDailyMaximum > 0 else { return 0 }
-        let remaining = max(budgetResult.remainingSafeAmountToday, 0)
-        let value = (remaining as NSDecimalNumber).doubleValue / (budgetResult.recommendedDailyMaximum as NSDecimalNumber).doubleValue
-        return min(max(value, 0), 1)
+    private func formattedCurrency(_ amount: Decimal) -> String {
+        MoneyFormatter.string(from: amount, currencyCode: currencyCode)
+    }
+}
+
+private enum DashboardPeriod: String, CaseIterable, Identifiable {
+    case previousMonth
+    case thisMonth
+    case nextMonth
+    case thisYear
+    case custom
+
+    var id: Self { self }
+
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .previousMonth: "filter.period.previousMonth"
+        case .thisMonth: "filter.period.thisMonth"
+        case .nextMonth: "filter.period.nextMonth"
+        case .thisYear: "filter.period.thisYear"
+        case .custom: "filter.period.custom"
+        }
+    }
+
+    func interval(
+        customStartDate: Date,
+        customEndDate: Date,
+        now: Date = .now,
+        calendar: Calendar = .current
+    ) -> DateInterval {
+        switch self {
+        case .previousMonth:
+            let date = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+            return calendar.dateInterval(of: .month, for: date)
+                ?? DateInterval(start: date, duration: 1)
+        case .thisMonth:
+            return calendar.dateInterval(of: .month, for: now)
+                ?? DateInterval(start: now, duration: 1)
+        case .nextMonth:
+            let date = calendar.date(byAdding: .month, value: 1, to: now) ?? now
+            return calendar.dateInterval(of: .month, for: date)
+                ?? DateInterval(start: date, duration: 1)
+        case .thisYear:
+            return calendar.dateInterval(of: .year, for: now)
+                ?? DateInterval(start: now, duration: 1)
+        case .custom:
+            let start = calendar.startOfDay(for: min(customStartDate, customEndDate))
+            let lastDay = calendar.startOfDay(for: max(customStartDate, customEndDate))
+            let end = calendar.date(byAdding: .day, value: 1, to: lastDay) ?? lastDay
+            return DateInterval(start: start, end: end)
+        }
+    }
+}
+
+private struct DashboardPeriodSummary {
+    var totalIncome = Decimal.zero
+    var totalExpenses = Decimal.zero
+    var receivableIncome = Decimal.zero
+    var entryCount = 0
+    var daysUntilNextIncome = 0
+}
+
+private struct DashboardSummaryCalculator {
+    private let calendar: Calendar
+
+    init(calendar: Calendar = .current) {
+        self.calendar = calendar
+    }
+
+    func nextExpenseDate(after date: Date, expense: FixedExpense) -> Date? {
+        nextExpenseOccurrence(
+            after: date,
+            recurrence: expense.recurrence,
+            customMonths: expense.customRecurrenceMonths
+        )
+    }
+
+    func summary(
+        transactions: [Transaction],
+        incomes: [Income],
+        fixedExpenses: [FixedExpense],
+        interval: DateInterval,
+        now: Date = .now
+    ) -> DashboardPeriodSummary {
+        var result = DashboardPeriodSummary()
+        result.daysUntilNextIncome = daysUntilNextIncome(
+            incomes: incomes,
+            now: now
+        )
+
+        for transaction in transactions {
+            let date = transaction.dueDate ?? transaction.date
+            guard interval.contains(date) else { continue }
+            result.totalExpenses += transaction.amount
+            result.entryCount += 1
+        }
+
+        for income in incomes where income.isActive {
+            let occurrences = incomeOccurrences(for: income, interval: interval)
+            for occurrence in occurrences {
+                result.totalIncome += income.amount
+                result.entryCount += 1
+
+                let isOriginalOccurrence = calendar.isDate(
+                    occurrence,
+                    inSameDayAs: income.dueDate ?? income.date
+                )
+                let status = isOriginalOccurrence
+                    ? income.effectivePaymentStatus(now: now, calendar: calendar)
+                    : PaymentStatus.pending.effectiveStatus(
+                        dueDate: occurrence,
+                        now: now,
+                        calendar: calendar
+                    )
+                if status == .pending || status == .overdue {
+                    result.receivableIncome += income.amount
+                }
+            }
+        }
+
+        for expense in fixedExpenses where expense.isActive {
+            for _ in fixedExpenseOccurrences(for: expense, interval: interval) {
+                result.totalExpenses += expense.amount
+                result.entryCount += 1
+            }
+        }
+
+        return result
+    }
+
+    private func daysUntilNextIncome(
+        incomes: [Income],
+        now: Date
+    ) -> Int {
+        let today = calendar.startOfDay(for: now)
+        let nextDate = incomes
+            .filter(\.isActive)
+            .compactMap { nextIncomeDate(for: $0, onOrAfter: today) }
+            .min()
+        guard let nextDate else {
+            return 0
+        }
+        return max(
+            calendar.dateComponents([.day], from: today, to: nextDate).day ?? 0,
+            0
+        )
+    }
+
+    private func nextIncomeDate(for income: Income, onOrAfter date: Date) -> Date? {
+        var occurrence = calendar.startOfDay(for: income.dueDate ?? income.date)
+        if income.recurrence == .oneTime {
+            return occurrence >= date ? occurrence : nil
+        }
+        while occurrence < date {
+            guard let next = nextIncomeOccurrence(
+                after: occurrence,
+                recurrence: income.recurrence
+            ), next > occurrence else { return nil }
+            occurrence = next
+        }
+        return occurrence
+    }
+
+    private func incomeOccurrences(
+        for income: Income,
+        interval: DateInterval
+    ) -> [Date] {
+        var occurrence = calendar.startOfDay(for: income.dueDate ?? income.date)
+
+        if income.recurrence == .oneTime {
+            return interval.contains(occurrence) ? [occurrence] : []
+        }
+
+        while occurrence < interval.start {
+            guard let next = nextIncomeOccurrence(
+                after: occurrence,
+                recurrence: income.recurrence
+            ), next > occurrence else {
+                return []
+            }
+            occurrence = next
+        }
+
+        var result: [Date] = []
+        while occurrence < interval.end {
+            result.append(occurrence)
+            guard let next = nextIncomeOccurrence(
+                after: occurrence,
+                recurrence: income.recurrence
+            ), next > occurrence else {
+                break
+            }
+            occurrence = next
+        }
+        return result
+    }
+
+    private func fixedExpenseOccurrences(
+        for expense: FixedExpense,
+        interval: DateInterval
+    ) -> [Date] {
+        let firstOccurrence = expense.dueDate
+            ?? firstMonthlyDate(day: expense.dueDay, onOrAfter: interval.start)
+        guard var occurrence = firstOccurrence.map({
+            calendar.startOfDay(for: $0)
+        }) else {
+            return []
+        }
+
+        while occurrence < interval.start {
+            guard let next = nextExpenseOccurrence(
+                after: occurrence,
+                recurrence: expense.recurrence,
+                customMonths: expense.customRecurrenceMonths
+            ), next > occurrence else {
+                return []
+            }
+            occurrence = next
+        }
+
+        var result: [Date] = []
+        while occurrence < interval.end {
+            result.append(occurrence)
+            guard let next = nextExpenseOccurrence(
+                after: occurrence,
+                recurrence: expense.recurrence,
+                customMonths: expense.customRecurrenceMonths
+            ), next > occurrence else {
+                break
+            }
+            occurrence = next
+        }
+        return result
+    }
+
+    private func firstMonthlyDate(day: Int, onOrAfter date: Date) -> Date? {
+        let start = calendar.startOfDay(for: date)
+        var components = calendar.dateComponents([.year, .month], from: start)
+        components.day = min(max(day, 1), 28)
+        guard let candidate = calendar.date(from: components) else { return nil }
+        return candidate >= start
+            ? candidate
+            : calendar.date(byAdding: .month, value: 1, to: candidate)
+    }
+
+    private func nextIncomeOccurrence(
+        after date: Date,
+        recurrence: IncomeRecurrence
+    ) -> Date? {
+        switch recurrence {
+        case .oneTime: nil
+        case .weekly: calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly: calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly: calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly: calendar.date(byAdding: .month, value: 3, to: date)
+        case .yearly: calendar.date(byAdding: .year, value: 1, to: date)
+        }
+    }
+
+    private func nextExpenseOccurrence(
+        after date: Date,
+        recurrence: ExpenseRecurrence,
+        customMonths: Int
+    ) -> Date? {
+        switch recurrence {
+        case .weekly: calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly: calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly: calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly: calendar.date(byAdding: .month, value: 3, to: date)
+        case .semiannual: calendar.date(byAdding: .month, value: 6, to: date)
+        case .yearly: calendar.date(byAdding: .year, value: 1, to: date)
+        case .custom:
+            calendar.date(
+                byAdding: .month,
+                value: max(customMonths, 1),
+                to: date
+            )
+        }
     }
 }
 
@@ -327,24 +620,26 @@ private struct DashboardMetricView: View {
     let titleKey: LocalizedStringKey
     let value: String
     let systemImage: String
+    let color: Color
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.small) {
             Image(systemName: systemImage)
                 .font(.headline)
-                .foregroundStyle(AppStyle.accentColor)
+                .foregroundStyle(color)
                 .accessibilityHidden(true)
 
             Text(value)
                 .font(.headline)
+                .foregroundStyle(color)
                 .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+                .minimumScaleFactor(0.75)
+                .contentTransition(.numericText())
 
             Text(titleKey)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, minHeight: 104, alignment: .leading)
         .padding(AppSpacing.medium)
@@ -358,6 +653,7 @@ private struct DashboardMetricView: View {
             UserFinancialProfile.self,
             FixedExpense.self,
             Transaction.self,
+            Income.self,
             SavingsGoal.self,
             DailyBudgetSnapshot.self
         ], inMemory: true)
