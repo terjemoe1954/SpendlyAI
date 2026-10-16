@@ -12,6 +12,7 @@ struct PrivacyAndSupportView: View {
     @Query private var profiles: [UserFinancialProfile]
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var transactions: [Transaction]
+    @Query private var incomes: [Income]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var dailyBudgetSnapshots: [DailyBudgetSnapshot]
 
@@ -133,6 +134,7 @@ struct PrivacyAndSupportView: View {
             profiles,
             fixedExpenses,
             transactions,
+            incomes,
             savingsGoals,
             dailyBudgetSnapshots
         ]
@@ -210,6 +212,7 @@ private enum DataDeletionAlert {
         UserFinancialProfile.self,
         FixedExpense.self,
         Transaction.self,
+        Income.self,
         SavingsGoal.self,
         DailyBudgetSnapshot.self
     ], inMemory: true)

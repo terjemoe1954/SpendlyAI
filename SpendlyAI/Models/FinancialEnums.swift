@@ -74,6 +74,8 @@ enum ExpenseCategory: String, Codable, CaseIterable {
     case withdrawals
     case entertainment
     case developer
+    case diningOut
+    case balanceAdjustment
 
     // Retained so existing data from earlier versions can still be decoded.
     case utilities
@@ -83,7 +85,12 @@ enum ExpenseCategory: String, Codable, CaseIterable {
     static var allCases: [ExpenseCategory] {
         [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .housing,
          .income, .clothing, .communication, .gambling, .savings, .transport,
-         .withdrawals, .entertainment, .developer]
+         .withdrawals, .entertainment, .developer, .diningOut,
+         .balanceAdjustment]
+    }
+
+    var countsAsSpending: Bool {
+        self != .savings && self != .balanceAdjustment
     }
 }
 
@@ -120,6 +127,8 @@ enum SpendingCategory: String, Codable, CaseIterable {
     case withdrawals
     case entertainment
     case developer
+    case diningOut
+    case balanceAdjustment
 
     // Retained so existing data from earlier versions can still be decoded.
     case food
@@ -129,7 +138,12 @@ enum SpendingCategory: String, Codable, CaseIterable {
     static var allCases: [SpendingCategory] {
         [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .home,
          .income, .clothing, .communication, .gambling, .savings, .transport,
-         .withdrawals, .entertainment, .developer]
+         .withdrawals, .entertainment, .developer, .diningOut,
+         .balanceAdjustment]
+    }
+
+    var countsAsSpending: Bool {
+        self != .savings && self != .balanceAdjustment
     }
 }
 

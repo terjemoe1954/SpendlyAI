@@ -143,6 +143,8 @@ extension SpendingCategory {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .food: "category.food"
         case .shopping: "category.shopping"
         case .bills: "category.bills"

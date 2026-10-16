@@ -21,6 +21,7 @@ struct RootView: View {
         }
         .preferredColorScheme(AppAppearance(rawValue: selectedAppearance)?.colorScheme)
         .task(id: profiles.first?.persistentModelID) {
+            CategoryMigrationService().migrateIfNeeded(modelContext: modelContext)
             removeLegacyProfileAmounts()
         }
     }

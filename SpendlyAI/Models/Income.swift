@@ -86,6 +86,8 @@ enum IncomeCategory: String, Codable, CaseIterable {
     case withdrawals
     case entertainment
     case developer
+    case diningOut
+    case balanceAdjustment
 
     // Retained so backups and existing data from earlier versions still decode.
     case salary
@@ -98,7 +100,12 @@ enum IncomeCategory: String, Codable, CaseIterable {
     static var allCases: [IncomeCategory] {
         [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .home,
          .income, .clothing, .communication, .gambling, .savings, .transport,
-         .withdrawals, .entertainment, .developer]
+         .withdrawals, .entertainment, .developer, .diningOut,
+         .balanceAdjustment]
+    }
+
+    var countsAsIncome: Bool {
+        normalizedCategory != .savings && normalizedCategory != .balanceAdjustment
     }
 
     var normalizedCategory: IncomeCategory {
@@ -130,6 +137,8 @@ enum IncomeCategory: String, Codable, CaseIterable {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .salary, .freelance, .benefits, .investment, .gift, .refund:
             "category.income"
         }
@@ -153,6 +162,8 @@ enum IncomeCategory: String, Codable, CaseIterable {
         case .withdrawals: "banknote"
         case .entertainment: "ticket"
         case .developer: "hammer"
+        case .diningOut: "fork.knife"
+        case .balanceAdjustment: "slider.horizontal.3"
         case .salary, .freelance, .benefits, .investment, .gift, .refund:
             "arrow.down.circle"
         }

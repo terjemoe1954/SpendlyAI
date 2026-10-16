@@ -1097,7 +1097,6 @@ struct SpendlyAITests {
             daysUntilNextIncome: 8,
             upcomingFixedExpenses: 1_200,
             plannedSavings: 500,
-            minimumBuffer: 1_000,
             isBudgetUnderPressure: isBudgetUnderPressure
         )
     }

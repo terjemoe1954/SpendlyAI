@@ -778,6 +778,8 @@ private extension SpendingCategory {
         case .communication: "phone"
         case .withdrawals: "banknote"
         case .developer: "hammer"
+        case .diningOut: "fork.knife"
+        case .balanceAdjustment: "slider.horizontal.3"
         case .other: "circle.grid.2x2"
         }
     }
@@ -794,6 +796,8 @@ private extension ExpenseCategory {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .housing: "expenseCategory.housing"
         case .utilities: "expenseCategory.utilities"
         case .insurance: "expenseCategory.insurance"
@@ -828,6 +832,8 @@ private extension ExpenseCategory {
         case .withdrawals: "banknote"
         case .entertainment: "ticket"
         case .developer: "hammer"
+        case .diningOut: "fork.knife"
+        case .balanceAdjustment: "slider.horizontal.3"
         case .other: "doc.text"
         }
     }

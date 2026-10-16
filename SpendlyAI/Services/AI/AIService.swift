@@ -13,7 +13,6 @@ struct AIBudgetContext: Codable, Equatable {
     let daysUntilNextIncome: Int
     let upcomingFixedExpenses: Decimal
     let plannedSavings: Decimal
-    let minimumBuffer: Decimal
     let isBudgetUnderPressure: Bool
 }
 
@@ -103,7 +102,7 @@ struct AIService {
         }
     }
 
-    nonisolated func fallbackAnswer(for request: AIRequest, after error: AIServiceError? = nil) -> AIResponse {
+    func fallbackAnswer(for request: AIRequest, after error: AIServiceError? = nil) -> AIResponse {
         let context = request.budgetContext
         let question = request.question.lowercased()
         let locale = Locale.current
@@ -135,21 +134,21 @@ struct AIService {
 
         if question.contains("lav") || question.contains("hvorfor") || question.contains("lower") || question.contains("why") {
             let message = usesNorwegian
-                ? "Dagsbudsjettet tar høyde for \(fixedExpenses) i kommende faste utgifter, sparemål og bufferen din. Du har \(remaining) igjen å bruke i dag."
-                : "Your daily budget accounts for \(fixedExpenses) in upcoming fixed expenses, savings goals, and your buffer. You have \(remaining) left today."
+                ? "Dagsbudsjettet tar høyde for \(fixedExpenses) i kommende faste utgifter og sparemål. Du har \(remaining) igjen å bruke i dag."
+                : "Your daily budget accounts for \(fixedExpenses) in upcoming fixed expenses and savings goals. You have \(remaining) left today."
             return AIResponse(message: message)
         }
 
         if context.isBudgetUnderPressure || context.remainingToday < 0 {
             let message = usesNorwegian
-                ? "Du har \(remaining) igjen i dagens budsjett. Budsjettet er presset, så nye kjøp vil redusere bufferen frem til neste inntekt."
-                : "You have \(remaining) left in today’s budget. The budget is under pressure, so new purchases will reduce your buffer until the next income."
+                ? "Du har \(remaining) igjen i dagens budsjett. Budsjettet er presset, så nye kjøp vil redusere beløpet du har igjen frem til neste inntekt."
+                : "You have \(remaining) left in today’s budget. The budget is under pressure, so new purchases will reduce what remains until the next income."
             return AIResponse(message: message)
         }
 
         let message = usesNorwegian
-            ? "Du har \(remaining) igjen å bruke i dag etter faste utgifter, sparemål og buffer."
-            : "You have \(remaining) left to spend today after fixed expenses, savings goals, and your buffer."
+            ? "Du har \(remaining) igjen å bruke i dag etter faste utgifter og sparemål."
+            : "You have \(remaining) left to spend today after fixed expenses and savings goals."
         return AIResponse(message: message)
     }
 }

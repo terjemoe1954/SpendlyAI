@@ -37,7 +37,6 @@ struct AIView: View {
             daysUntilNextIncome: result.daysRemaining,
             upcomingFixedExpenses: result.upcomingFixedExpenses,
             plannedSavings: result.plannedSavings,
-            minimumBuffer: result.minimumBuffer,
             isBudgetUnderPressure: result.isNegativeBudget
         )
     }

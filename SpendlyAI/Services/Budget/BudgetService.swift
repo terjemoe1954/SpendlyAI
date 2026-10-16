@@ -281,7 +281,7 @@ extension BudgetService {
             availableMoney: profile.monthlyNetIncome + additionalIncome,
             periodStart: profile.budgetPeriodStart,
             nextIncomeDate: profile.budgetPeriodEnd,
-            fixedExpenses: fixedExpenses.map { expense in
+            fixedExpenses: fixedExpenses.filter(\.category.countsAsSpending).map { expense in
                 BudgetFixedExpense(
                     amount: expense.amount,
                     dueDay: expense.dueDay,
@@ -302,11 +302,12 @@ extension BudgetService {
                 BudgetTransaction(
                     amount: transaction.amount,
                     date: transaction.settledDate ?? transaction.date,
-                    isSettled: transaction.paymentStatus == .settled
-                        || transaction.paymentStatus == .withdrawn
+                    isSettled: transaction.category.countsAsSpending
+                        && (transaction.paymentStatus == .settled
+                            || transaction.paymentStatus == .withdrawn)
                 )
             },
-            minimumBuffer: profile.minimumBuffer
+            minimumBuffer: 0
         )
     }
 
@@ -322,6 +323,7 @@ extension BudgetService {
         return incomes.reduce(0) { total, income in
             guard income.isActive,
                   income.category != .salary,
+                  income.category.countsAsIncome,
                   income.paymentStatus == .settled || income.paymentStatus == .withdrawn else {
                 return total
             }

@@ -217,7 +217,6 @@ struct SettingsView: View {
             daysUntilNextIncome: budget.daysRemaining,
             upcomingFixedExpenses: budget.upcomingFixedExpenses,
             plannedSavings: budget.plannedSavings,
-            minimumBuffer: budget.minimumBuffer,
             isBudgetUnderPressure: budget.isNegativeBudget || budget.remainingSafeAmountToday < 0
         )
     }

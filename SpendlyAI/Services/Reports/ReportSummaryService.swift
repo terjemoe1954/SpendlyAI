@@ -46,10 +46,10 @@ struct ReportSummaryService {
         let upperBound = calendar.date(byAdding: .day, value: 1, to: endDay) ?? endDay
 
         let matchingTransactions = transactions.filter {
-            $0.date >= lowerBound && $0.date < upperBound
+            $0.category.countsAsSpending && $0.date >= lowerBound && $0.date < upperBound
         }
         let matchingIncomes = incomes.filter {
-            $0.date >= lowerBound && $0.date < upperBound
+            $0.category.countsAsIncome && $0.date >= lowerBound && $0.date < upperBound
         }
         let fixedExpenseSummary = summarizeFixedExpenses(
             fixedExpenses,
@@ -98,6 +98,7 @@ struct ReportSummaryService {
     ) -> FixedExpenseReportSummary {
         expenses.reduce(into: FixedExpenseReportSummary()) { result, expense in
             guard expense.isActive,
+                  expense.category.countsAsSpending,
                   var dueDate = firstDueDate(
                     forDay: expense.dueDay,
                     from: startDate,

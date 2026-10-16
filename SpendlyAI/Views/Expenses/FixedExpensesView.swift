@@ -529,6 +529,8 @@ private extension ExpenseCategory {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .utilities: "expenseCategory.utilities"
         case .debt: "expenseCategory.debt"
         case .childcare: "expenseCategory.childcare"

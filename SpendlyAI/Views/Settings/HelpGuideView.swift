@@ -146,12 +146,11 @@ private enum HelpTopic: String, Hashable {
                 HelpSection(titleKey: "help.dailyBudget.today.title", bodyKey: "help.dailyBudget.today.body"),
                 HelpSection(
                     titleKey: "What is included in Safe to Spend",
-                    bodyKey: "Safe to Spend is calculated from income minus paid purchases earlier in the budget period, upcoming active fixed expenses due before the next income date, planned savings, and the minimum buffer. The remainder is divided by the number of days until the next income. Purchases paid today are then subtracted from today's amount. Monthly, quarterly, semiannual, annual, and custom fixed expenses are included only when their actual next due date falls within the period. Purchases marked Waiting are not currently reserved in advance, even when they have a due date."
+                    bodyKey: "Safe to Spend is calculated from income minus paid purchases earlier in the budget period, upcoming active fixed expenses due before the next income date, planned savings. The remainder is divided by the number of days until the next income. Purchases paid today are then subtracted from today's amount. Monthly, quarterly, semiannual, annual, and custom fixed expenses are included only when their actual next due date falls within the period. Purchases marked Waiting are not currently reserved in advance, even when they have a due date."
                 )
             ]
         case .planning:
             [
-                HelpSection(titleKey: "help.planning.buffer.title", bodyKey: "help.planning.buffer.body"),
                 HelpSection(titleKey: "help.planning.expenses.title", bodyKey: "help.planning.expenses.body"),
                 HelpSection(titleKey: "help.planning.goals.title", bodyKey: "help.planning.goals.body")
             ]

@@ -288,7 +288,6 @@ struct DashboardView: View {
             daysUntilNextIncome: budgetResult.daysRemaining,
             upcomingFixedExpenses: budgetResult.upcomingFixedExpenses,
             plannedSavings: budgetResult.plannedSavings,
-            minimumBuffer: budgetResult.minimumBuffer,
             isBudgetUnderPressure: budgetResult.isNegativeBudget
         ))
 

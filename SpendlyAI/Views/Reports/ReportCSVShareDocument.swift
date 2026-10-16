@@ -10,7 +10,7 @@ struct ReportCSVShareDocument: Transferable, Sendable {
             let fileURL = FileManager.default.temporaryDirectory
                 .appendingPathComponent("SpendlyAI-transactions")
                 .appendingPathExtension("csv")
-            let data = ReportCSVGenerator().makeCSV(entries: document.entries)
+            let data = await ReportCSVGenerator().makeCSV(entries: document.entries)
             try data.write(to: fileURL, options: .atomic)
             return SentTransferredFile(fileURL)
         }

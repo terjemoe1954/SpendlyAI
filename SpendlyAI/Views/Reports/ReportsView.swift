@@ -383,7 +383,7 @@ struct ReportsView: View {
         guard expense.isActive else { return [] }
 
         let calendar = Calendar.current
-        var occurrence = expense.dueDate ?? firstDueDate(
+        let occurrence = expense.dueDate ?? firstDueDate(
             day: expense.dueDay,
             onOrAfter: startDate,
             calendar: calendar
@@ -495,6 +495,8 @@ struct ReportsView: View {
         case .withdrawals: key = "category.withdrawals"
         case .entertainment: key = "category.entertainment"
         case .developer: key = "category.developer"
+        case .diningOut: key = "category.diningOut"
+        case .balanceAdjustment: key = "category.balanceAdjustment"
         case .salary, .freelance, .benefits, .investment, .gift, .refund:
             key = "category.income"
         }
@@ -519,6 +521,8 @@ struct ReportsView: View {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .food: "category.food"
         case .shopping: "category.shopping"
         case .bills: "category.bills"
@@ -551,6 +555,8 @@ struct ReportsView: View {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .balanceAdjustment: "category.balanceAdjustment"
         case .utilities: "expenseCategory.utilities"
         case .debt: "expenseCategory.debt"
         case .childcare: "expenseCategory.childcare"
