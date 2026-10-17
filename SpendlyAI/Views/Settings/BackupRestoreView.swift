@@ -35,6 +35,7 @@ struct BackupRestoreView: View {
 
     @State private var exportDocument: BackupDocument?
     @State private var isExporting = false
+    @State private var exportFilename = "SpendlyAI-backup"
     @State private var isImporting = false
     @State private var pendingBackup: SpendlyBackup?
     @State private var notice: BackupNotice?
@@ -71,7 +72,7 @@ struct BackupRestoreView: View {
             isPresented: $isExporting,
             document: exportDocument,
             contentType: .json,
-            defaultFilename: defaultFilename
+            defaultFilename: exportFilename
         ) { result in
             switch result {
             case .success:
@@ -171,10 +172,10 @@ struct BackupRestoreView: View {
         )
     }
 
-    private var defaultFilename: String {
+    private func makeExportFilename() -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
-        formatter.dateFormat = "yyyy-MM-dd-HHmmss"
+        formatter.dateFormat = "yyyy-MM-dd-HHmmss-SSS"
         return "SpendlyAI-backup-\(formatter.string(from: .now))"
     }
 
@@ -187,6 +188,7 @@ struct BackupRestoreView: View {
                 fixedExpenses: fixedExpenses,
                 savingsGoals: savingsGoals
             )
+            exportFilename = makeExportFilename()
             exportDocument = BackupDocument(data: try backupService.encode(backup))
             isExporting = true
         } catch {

@@ -19,6 +19,7 @@ struct TransactionEditorView: View {
     @State private var settledDate: Date
     @State private var paymentStatus: PaymentStatus
     @State private var notes: String
+    @State private var hasSelectedCategoryManually: Bool
 
     private var canSave: Bool {
         decimalValue(from: amount) != nil
@@ -33,25 +34,29 @@ struct TransactionEditorView: View {
         _settledDate = State(initialValue: transaction?.settledDate ?? transaction?.date ?? .now)
         _paymentStatus = State(initialValue: transaction?.paymentStatus ?? .settled)
         _notes = State(initialValue: transaction?.notes ?? "")
+        _hasSelectedCategoryManually = State(initialValue: transaction != nil)
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("transaction.details") {
+                    TextField("transaction.description", text: $transactionDescription)
+                        .onChange(of: transactionDescription) { _, newValue in
+                            applySuggestedCategory(for: newValue)
+                        }
+
+                    categoryMenu
+
                     TextField("transaction.amount", text: $amount)
                         .keyboardType(.decimalPad)
 
-                    Picker("transaction.category", selection: $category) {
-                        ForEach(SpendingCategory.allCases, id: \.self) { category in
-                            Text(category.titleKey)
-                                .tag(category)
-                        }
-                    }
-
-                    TextField("transaction.description", text: $transactionDescription)
-
-                    DatePicker("payment.dueDate", selection: $dueDate, displayedComponents: .date)
+                    DatePicker(
+                        "payment.dueDate",
+                        selection: $dueDate,
+                        displayedComponents: .date
+                    )
+                    .datePickerStyle(.compact)
 
                     Picker("payment.status", selection: $paymentStatus) {
                         ForEach(PaymentStatus.allCases, id: \.self) { status in
@@ -59,9 +64,15 @@ struct TransactionEditorView: View {
                                 .tag(status)
                         }
                     }
+                    .pickerStyle(.menu)
 
                     if paymentStatus == .settled || paymentStatus == .withdrawn {
-                        DatePicker("payment.paidDate", selection: $settledDate, displayedComponents: .date)
+                        DatePicker(
+                            "payment.paidDate",
+                            selection: $settledDate,
+                            displayedComponents: .date
+                        )
+                        .datePickerStyle(.compact)
                     }
                 }
 
@@ -86,6 +97,38 @@ struct TransactionEditorView: View {
                 }
             }
         }
+    }
+
+    private var categoryMenu: some View {
+        Menu {
+            ForEach(SpendingCategory.allCases, id: \.self) { option in
+                Button {
+                    category = option
+                    hasSelectedCategoryManually = true
+                } label: {
+                    if option == category {
+                        Label(option.titleKey, systemImage: "checkmark")
+                    } else {
+                        Text(option.titleKey)
+                    }
+                }
+            }
+        } label: {
+            LabeledContent("transaction.category") {
+                Text(category.titleKey)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+    }
+
+    private func applySuggestedCategory(for description: String) {
+        guard transaction == nil,
+              !hasSelectedCategoryManually,
+              let suggestion = CategorySuggestionService.suggestion(for: description) else {
+            return
+        }
+        category = suggestion
     }
 
     private func saveTransaction() {
@@ -121,6 +164,69 @@ struct TransactionEditorView: View {
 
     private func decimalValue(from text: String) -> Decimal? {
         MoneyParser.decimal(from: text)
+    }
+}
+
+private enum CategorySuggestionService {
+    private static let rules: [(SpendingCategory, [String])] = [
+        (.diningOut, [
+            "burger king", "mcdonald", "restaurant", "resturant", "kafé", "kafe",
+            "café", "takeaway", "pizza", "sushi", "hamburger", "gatekjøkken"
+        ]),
+        (.groceries, [
+            "kiwi", "rema", "coop", "meny", "joker", "bunnpris", "spar",
+            "extra", "matbutikk", "dagligvare"
+        ]),
+        (.communication, [
+            "telenor", "telia", "ice", "onecall", "talkmore", "mobil",
+            "bredbånd", "bredband", "internett", "internet"
+        ]),
+        (.transport, [
+            "ruter", "vy", "taxi", "uber", "buss", "tog", "parkering",
+            "bompenger", "circle k", "esso", "bensin", "diesel"
+        ]),
+        (.developer, [
+            "chatgpt", "openai", "apple developer", "app store connect",
+            "github", "xcode", "hosting", "domene"
+        ]),
+        (.health, [
+            "apotek", "lege", "tannlege", "brille", "optiker", "medisin"
+        ]),
+        (.home, [
+            "husleie", "boliglån", "boliglan", "strøm", "strom",
+            "elektrisitet", "fjernvarme"
+        ]),
+        (.clothing, [
+            "klær", "klaer", "sko", "zalando", "hm.com", "dressmann"
+        ]),
+        (.entertainment, [
+            "kino", "konsert", "hotell", "ferie", "flybillett", "museum"
+        ]),
+        (.subscriptions, [
+            "netflix", "spotify", "hbo", "disney+", "abonnement"
+        ]),
+        (.insurance, ["forsikring"]),
+        (.gifts, ["gave", "blomster"]),
+        (.gambling, ["norsk tipping", "lotto", "oddsen"]),
+        (.withdrawals, ["restskatt", "skatt", "avgift"])
+    ]
+
+    static func suggestion(for description: String) -> SpendingCategory? {
+        let normalized = description
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard normalized.count >= 3 else { return nil }
+
+        return rules.first { _, keywords in
+            keywords.contains { keyword in
+                let normalizedKeyword = keyword.folding(
+                    options: [.caseInsensitive, .diacriticInsensitive],
+                    locale: .current
+                )
+                return normalized.contains(normalizedKeyword)
+            }
+        }?.0
     }
 }
 
