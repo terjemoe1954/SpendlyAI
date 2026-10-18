@@ -100,7 +100,7 @@ enum IncomeCategory: String, Codable, CaseIterable {
     static var allCases: [IncomeCategory] {
         [.subscriptions, .other, .groceries, .insurance, .gifts, .health, .home,
          .income, .clothing, .communication, .gambling, .savings, .transport,
-         .withdrawals, .entertainment, .developer, .diningOut,
+         .withdrawals, .entertainment, .developer, .diningOut, .refund,
          .balanceAdjustment]
     }
 
@@ -110,7 +110,7 @@ enum IncomeCategory: String, Codable, CaseIterable {
 
     var normalizedCategory: IncomeCategory {
         switch self {
-        case .salary, .freelance, .benefits, .investment, .refund:
+        case .salary, .freelance, .benefits, .investment:
             .income
         case .gift:
             .gifts
@@ -138,8 +138,9 @@ enum IncomeCategory: String, Codable, CaseIterable {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
-        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+        case .salary, .freelance, .benefits, .investment, .gift:
             "category.income"
         }
     }
@@ -163,8 +164,9 @@ enum IncomeCategory: String, Codable, CaseIterable {
         case .entertainment: "ticket"
         case .developer: "hammer"
         case .diningOut: "fork.knife"
+        case .refund: "arrow.uturn.backward.circle"
         case .balanceAdjustment: "slider.horizontal.3"
-        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+        case .salary, .freelance, .benefits, .investment, .gift:
             "arrow.down.circle"
         }
     }

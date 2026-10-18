@@ -496,8 +496,9 @@ struct ReportsView: View {
         case .entertainment: key = "category.entertainment"
         case .developer: key = "category.developer"
         case .diningOut: key = "category.diningOut"
+        case .refund: key = "incomeCategory.refund"
         case .balanceAdjustment: key = "category.balanceAdjustment"
-        case .salary, .freelance, .benefits, .investment, .gift, .refund:
+        case .salary, .freelance, .benefits, .investment, .gift:
             key = "category.income"
         }
         return localizedString(key)
@@ -522,6 +523,7 @@ struct ReportsView: View {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
         case .food: "category.food"
         case .shopping: "category.shopping"
@@ -556,6 +558,7 @@ struct ReportsView: View {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
         case .utilities: "expenseCategory.utilities"
         case .debt: "expenseCategory.debt"

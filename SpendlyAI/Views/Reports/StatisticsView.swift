@@ -365,6 +365,7 @@ private enum StatisticsCategory: String, CaseIterable, Identifiable {
     case entertainment
     case developer
     case diningOut
+    case refund
 
     var id: Self { self }
 
@@ -387,6 +388,7 @@ private enum StatisticsCategory: String, CaseIterable, Identifiable {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         }
     }
 
@@ -417,6 +419,7 @@ private enum StatisticsCategory: String, CaseIterable, Identifiable {
         case .entertainment: "ticket"
         case .developer: "hammer"
         case .diningOut: "fork.knife"
+        case .refund: "arrow.uturn.backward.circle"
         }
     }
 

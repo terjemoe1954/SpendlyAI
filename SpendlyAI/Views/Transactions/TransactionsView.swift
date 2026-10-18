@@ -321,6 +321,7 @@ struct TransactionsView: View {
 
 private struct TransactionFilterView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
 
     @Binding var activityFilter: ActivityFilter
     @Binding var periodFilter: ActivityPeriodFilter
@@ -328,6 +329,13 @@ private struct TransactionFilterView: View {
     @Binding var categoryFilter: ActivityCategory?
     @Binding var minimumAmount: String
     @Binding var maximumAmount: String
+
+    private var sortedCategories: [ActivityCategory] {
+        ActivityCategory.allCases.sorted {
+            $0.localizedTitle(locale: locale)
+                .localizedStandardCompare($1.localizedTitle(locale: locale)) == .orderedAscending
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -360,7 +368,7 @@ private struct TransactionFilterView: View {
                 Section("filter.category") {
                     Picker("filter.category", selection: $categoryFilter) {
                         Text("filter.allCategories").tag(nil as ActivityCategory?)
-                        ForEach(ActivityCategory.allCases) { category in
+                        ForEach(sortedCategories) { category in
                             Text(category.titleKey).tag(category as ActivityCategory?)
                         }
                     }
@@ -447,10 +455,12 @@ private enum ActivityCategory: String, CaseIterable, Identifiable {
     case withdrawals
     case entertainment
     case developer
+    case diningOut
+    case refund
 
     var id: Self { self }
 
-    var titleKey: LocalizedStringKey {
+    private var titleKeyString: String {
         switch self {
         case .subscriptions: "expenseCategory.subscriptions"
         case .other: "category.other"
@@ -468,7 +478,17 @@ private enum ActivityCategory: String, CaseIterable, Identifiable {
         case .withdrawals: "category.withdrawals"
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
+        case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         }
+    }
+
+    var titleKey: LocalizedStringKey {
+        LocalizedStringKey(titleKeyString)
+    }
+
+    func localizedTitle(locale: Locale) -> String {
+        String(localized: String.LocalizationValue(titleKeyString), locale: locale)
     }
 }
 
@@ -779,6 +799,7 @@ private extension SpendingCategory {
         case .withdrawals: "banknote"
         case .developer: "hammer"
         case .diningOut: "fork.knife"
+        case .refund: "arrow.uturn.backward.circle"
         case .balanceAdjustment: "slider.horizontal.3"
         case .other: "circle.grid.2x2"
         }
@@ -797,6 +818,7 @@ private extension ExpenseCategory {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
         case .housing: "expenseCategory.housing"
         case .utilities: "expenseCategory.utilities"
@@ -833,6 +855,7 @@ private extension ExpenseCategory {
         case .entertainment: "ticket"
         case .developer: "hammer"
         case .diningOut: "fork.knife"
+        case .refund: "arrow.uturn.backward.circle"
         case .balanceAdjustment: "slider.horizontal.3"
         case .other: "doc.text"
         }

@@ -530,6 +530,7 @@ private extension ExpenseCategory {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
         case .utilities: "expenseCategory.utilities"
         case .debt: "expenseCategory.debt"

@@ -9,6 +9,7 @@ import SwiftUI
 struct TransactionEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Transaction.date, order: .reverse) private var existingTransactions: [Transaction]
 
     private let transaction: Transaction?
 
@@ -20,6 +21,8 @@ struct TransactionEditorView: View {
     @State private var paymentStatus: PaymentStatus
     @State private var notes: String
     @State private var hasSelectedCategoryManually: Bool
+    @State private var suggestedCategory: SpendingCategory?
+    @State private var activeDatePicker: TransactionDatePicker?
 
     private var canSave: Bool {
         decimalValue(from: amount) != nil
@@ -35,6 +38,8 @@ struct TransactionEditorView: View {
         _paymentStatus = State(initialValue: transaction?.paymentStatus ?? .settled)
         _notes = State(initialValue: transaction?.notes ?? "")
         _hasSelectedCategoryManually = State(initialValue: transaction != nil)
+        _suggestedCategory = State(initialValue: nil)
+        _activeDatePicker = State(initialValue: nil)
     }
 
     var body: some View {
@@ -51,12 +56,11 @@ struct TransactionEditorView: View {
                     TextField("transaction.amount", text: $amount)
                         .keyboardType(.decimalPad)
 
-                    DatePicker(
-                        "payment.dueDate",
-                        selection: $dueDate,
-                        displayedComponents: .date
+                    dateButton(
+                        titleKey: "payment.dueDate",
+                        date: dueDate,
+                        picker: .due
                     )
-                    .datePickerStyle(.compact)
 
                     Picker("payment.status", selection: $paymentStatus) {
                         ForEach(PaymentStatus.allCases, id: \.self) { status in
@@ -67,12 +71,11 @@ struct TransactionEditorView: View {
                     .pickerStyle(.menu)
 
                     if paymentStatus == .settled || paymentStatus == .withdrawn {
-                        DatePicker(
-                            "payment.paidDate",
-                            selection: $settledDate,
-                            displayedComponents: .date
+                        dateButton(
+                            titleKey: "payment.paidDate",
+                            date: settledDate,
+                            picker: .settled
                         )
-                        .datePickerStyle(.compact)
                     }
                 }
 
@@ -96,6 +99,9 @@ struct TransactionEditorView: View {
                     .disabled(!canSave)
                 }
             }
+            .sheet(item: $activeDatePicker) { picker in
+                datePickerSheet(for: picker)
+            }
         }
     }
 
@@ -104,6 +110,7 @@ struct TransactionEditorView: View {
             ForEach(SpendingCategory.allCases, id: \.self) { option in
                 Button {
                     category = option
+                    suggestedCategory = nil
                     hasSelectedCategoryManually = true
                 } label: {
                     if option == category {
@@ -115,20 +122,93 @@ struct TransactionEditorView: View {
             }
         } label: {
             LabeledContent("transaction.category") {
-                Text(category.titleKey)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    if suggestedCategory == category {
+                        Image(systemName: "sparkles")
+                            .foregroundStyle(AppStyle.accentColor)
+                            .accessibilityHidden(true)
+                    }
+                    Text(category.titleKey)
+                        .foregroundStyle(.secondary)
+                }
             }
             .contentShape(Rectangle())
         }
     }
 
     private func applySuggestedCategory(for description: String) {
-        guard transaction == nil,
-              !hasSelectedCategoryManually,
-              let suggestion = CategorySuggestionService.suggestion(for: description) else {
-            return
+        guard transaction == nil, !hasSelectedCategoryManually else { return }
+
+        let suggestion = CategorySuggestionService.suggestion(
+            for: description,
+            history: existingTransactions
+        )
+        suggestedCategory = suggestion
+        category = suggestion ?? .other
+    }
+
+    private func dateButton(
+        titleKey: LocalizedStringKey,
+        date: Date,
+        picker: TransactionDatePicker
+    ) -> some View {
+        Button {
+            activeDatePicker = picker
+        } label: {
+            LabeledContent(titleKey) {
+                Text(date, format: .dateTime.day().month().year())
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
         }
-        category = suggestion
+        .buttonStyle(.plain)
+    }
+
+    private func datePickerSheet(for picker: TransactionDatePicker) -> some View {
+        NavigationStack {
+            DatePicker(
+                picker.titleKey,
+                selection: dateBinding(for: picker),
+                displayedComponents: .date
+            )
+            .datePickerStyle(.graphical)
+            .padding()
+            .onChange(of: selectedDate(for: picker)) { oldValue, newValue in
+                guard !Calendar.current.isDate(oldValue, inSameDayAs: newValue) else { return }
+                activeDatePicker = nil
+            }
+            .navigationTitle(picker.titleKey)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") {
+                        activeDatePicker = nil
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func dateBinding(for picker: TransactionDatePicker) -> Binding<Date> {
+        Binding(
+            get: { selectedDate(for: picker) },
+            set: { newValue in
+                switch picker {
+                case .due:
+                    dueDate = newValue
+                case .settled:
+                    settledDate = newValue
+                }
+            }
+        )
+    }
+
+    private func selectedDate(for picker: TransactionDatePicker) -> Date {
+        switch picker {
+        case .due: dueDate
+        case .settled: settledDate
+        }
     }
 
     private func saveTransaction() {
@@ -164,6 +244,20 @@ struct TransactionEditorView: View {
 
     private func decimalValue(from text: String) -> Decimal? {
         MoneyParser.decimal(from: text)
+    }
+}
+
+private enum TransactionDatePicker: String, Identifiable {
+    case due
+    case settled
+
+    var id: Self { self }
+
+    var titleKey: LocalizedStringKey {
+        switch self {
+        case .due: "payment.dueDate"
+        case .settled: "payment.paidDate"
+        }
     }
 }
 
@@ -205,28 +299,41 @@ private enum CategorySuggestionService {
         (.subscriptions, [
             "netflix", "spotify", "hbo", "disney+", "abonnement"
         ]),
+        (.refund, ["refusjon", "tilbakebetaling", "refundert"]),
         (.insurance, ["forsikring"]),
         (.gifts, ["gave", "blomster"]),
         (.gambling, ["norsk tipping", "lotto", "oddsen"]),
         (.withdrawals, ["restskatt", "skatt", "avgift"])
     ]
 
-    static func suggestion(for description: String) -> SpendingCategory? {
-        let normalized = description
-            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
+    static func suggestion(
+        for description: String,
+        history: [Transaction]
+    ) -> SpendingCategory? {
+        let normalized = normalize(description)
         guard normalized.count >= 3 else { return nil }
+
+        if let previousMatch = history.first(where: { transaction in
+            let previousDescription = normalize(transaction.transactionDescription)
+            guard previousDescription.count >= 3 else { return false }
+            return previousDescription == normalized
+                || previousDescription.contains(normalized)
+                || normalized.contains(previousDescription)
+        }) {
+            return previousMatch.category
+        }
 
         return rules.first { _, keywords in
             keywords.contains { keyword in
-                let normalizedKeyword = keyword.folding(
-                    options: [.caseInsensitive, .diacriticInsensitive],
-                    locale: .current
-                )
-                return normalized.contains(normalizedKeyword)
+                normalized.contains(normalize(keyword))
             }
         }?.0
+    }
+
+    private static func normalize(_ value: String) -> String {
+        value
+            .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
@@ -250,6 +357,7 @@ extension SpendingCategory {
         case .entertainment: "category.entertainment"
         case .developer: "category.developer"
         case .diningOut: "category.diningOut"
+        case .refund: "incomeCategory.refund"
         case .balanceAdjustment: "category.balanceAdjustment"
         case .food: "category.food"
         case .shopping: "category.shopping"

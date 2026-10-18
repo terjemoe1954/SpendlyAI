@@ -1389,14 +1389,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Clothing and shoes"
+            "state" : "machine_translated",
+            "value" : "Clothing & Shoes"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Klær og sko"
+            "state" : "needs_review",
+            "value" : "Klær & sko"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "เสื้อผ้าและรองเท้า"
           }
         }
       }
@@ -1408,13 +1414,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Phone and internet"
+            "value" : "Phone & Internet"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Telefon og internett"
+            "value" : "Telefon & internett"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "โทรศัพท์และอินเทอร์เน็ต"
           }
         }
       }
@@ -1426,13 +1438,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "App development"
+            "value" : "Hobby & Development"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Apputvikling"
+            "value" : "Hobby & Utvikling"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "งานอดิเรกและการพัฒนา"
           }
         }
       }
@@ -1458,20 +1476,20 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leisure and holidays"
+            "state" : "machine_translated",
+            "value" : "Leisure & Holidays"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fritid og ferie"
+            "state" : "needs_review",
+            "value" : "Fritid & ferie"
           }
         },
         "th" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "ความบันเทิง"
+            "state" : "machine_translated",
+            "value" : "สันทนาการและวันหยุด"
           }
         }
       }
@@ -1583,13 +1601,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Housing and electricity"
+            "value" : "Housing & Electricity"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Bolig og strøm"
+            "value" : "Bolig & strøm"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "ที่อยู่อาศัยและค่าไฟฟ้า"
           }
         }
       }
@@ -1601,13 +1625,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Income"
+            "value" : "Salary & Income"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Inntekter"
+            "value" : "Lønn & Inntekt"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "เงินเดือนและรายรับ"
           }
         }
       }
@@ -1733,13 +1763,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Taxes and fees"
+            "value" : "Taxes & Fees"
           }
         },
         "nb" : {
           "stringUnit" : {
             "state" : "needs_review",
-            "value" : "Skatt og avgifter"
+            "value" : "Skatt & avgifter"
+          }
+        },
+        "th" : {
+          "stringUnit" : {
+            "state" : "machine_translated",
+            "value" : "ภาษีและค่าธรรมเนียม"
           }
         }
       }
@@ -2775,19 +2811,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Housing and electricity"
+            "value" : "Housing & Electricity"
           }
         },
         "nb" : {
           "stringUnit" : {
-            "state" : "machine_translated",
-            "value" : "Bolig og strøm"
+            "state" : "needs_review",
+            "value" : "Bolig & strøm"
           }
         },
         "th" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "ที่อยู่อาศัย"
+            "value" : "ที่อยู่อาศัยและค่าไฟฟ้า"
           }
         }
       }
@@ -2901,7 +2937,7 @@
         "nb" : {
           "stringUnit" : {
             "state" : "machine_translated",
-            "value" : "Strøm og tjenester"
+            "value" : "Strøm & tjenester"
           }
         },
         "th" : {
@@ -6809,7 +6845,6 @@
     },
     "incomeCategory.refund" : {
       "comment" : "Localized string key for the refund income category.",
-      "extractionState" : "stale",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "en" : {
