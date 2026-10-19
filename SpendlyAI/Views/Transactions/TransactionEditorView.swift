@@ -299,7 +299,9 @@ private enum CategorySuggestionService {
         (.subscriptions, [
             "netflix", "spotify", "hbo", "disney+", "abonnement"
         ]),
-        (.refund, ["refusjon", "tilbakebetaling", "refundert"]),
+        (.refund, [
+            "refusjon", "tilbakebetaling", "refundert", "refund", "reimbursement", "repaid"
+        ]),
         (.insurance, ["forsikring"]),
         (.gifts, ["gave", "blomster"]),
         (.gambling, ["norsk tipping", "lotto", "oddsen"]),
@@ -313,21 +315,21 @@ private enum CategorySuggestionService {
         let normalized = normalize(description)
         guard normalized.count >= 3 else { return nil }
 
-        if let previousMatch = history.first(where: { transaction in
+        if let ruleMatch = rules.first(where: { _, keywords in
+            keywords.contains { keyword in
+                normalized.contains(normalize(keyword))
+            }
+        }) {
+            return ruleMatch.0
+        }
+
+        return history.first(where: { transaction in
             let previousDescription = normalize(transaction.transactionDescription)
             guard previousDescription.count >= 3 else { return false }
             return previousDescription == normalized
                 || previousDescription.contains(normalized)
                 || normalized.contains(previousDescription)
-        }) {
-            return previousMatch.category
-        }
-
-        return rules.first { _, keywords in
-            keywords.contains { keyword in
-                normalized.contains(normalize(keyword))
-            }
-        }?.0
+        })?.category
     }
 
     private static func normalize(_ value: String) -> String {
