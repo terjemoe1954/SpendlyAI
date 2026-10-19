@@ -1,7 +1,7 @@
 // TM
 // SpendlyAIApp.swift
 // SpendlyAI
-//   
+//
 
 import SwiftData
 import SwiftUI
