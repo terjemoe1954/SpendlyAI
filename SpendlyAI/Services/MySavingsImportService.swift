@@ -145,13 +145,16 @@ struct MySavingsImportService {
                     ))
                 }
             case "income":
+                let isHistoricalIncome = status == .settled
                 incomes.append(.init(
                     amount: amount,
                     date: date,
                     category: incomeCategory(for: sourceCategory),
                     title: item.title,
                     notes: notes,
-                    recurrence: incomeRecurrence(for: item.recurrence),
+                    // MySavings exports every received occurrence separately. Only its
+                    // upcoming pending occurrence should generate future income dates.
+                    recurrence: isHistoricalIncome ? .oneTime : incomeRecurrence(for: item.recurrence),
                     isActive: true,
                     dueDate: item.dueDate,
                     settledDate: settledDate,

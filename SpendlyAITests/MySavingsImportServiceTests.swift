@@ -133,6 +133,40 @@ struct MySavingsImportServiceTests {
         #expect(plan.fixedExpenses[0].dueDay == 20)
     }
 
+    @Test func doesNotRepeatReceivedIncomeHistory() throws {
+        let json = """
+        {
+          "formatVersion": 4,
+          "exportedAt": "2026-10-21T07:27:26Z",
+          "categories": [{"id": "income", "name": "Lønn & Inntekt"}],
+          "transactions": [
+            {
+              "amount": "30000", "category": "income",
+              "createdAt": "2026-10-20T10:00:00Z", "dueDate": "2026-10-20T10:00:00Z",
+              "isArchived": false, "isCompleted": true, "notes": "",
+              "paidDate": "2026-10-20T10:00:00Z", "recurrence": "monthly",
+              "status": "received", "title": "Pensjon", "type": "income"
+            },
+            {
+              "amount": "30000", "category": "income",
+              "createdAt": "2026-10-20T10:00:00Z", "dueDate": "2026-11-20T10:00:00Z",
+              "isArchived": false, "isCompleted": false, "notes": "",
+              "recurrence": "monthly", "status": "pending",
+              "title": "Copy of Pensjon", "type": "income"
+            }
+          ]
+        }
+        """
+
+        let plan = try MySavingsImportService().decode(Data(json.utf8))
+
+        #expect(plan.incomes.count == 2)
+        #expect(plan.incomes[0].recurrence == .oneTime)
+        #expect(plan.incomes[0].paymentStatus == .settled)
+        #expect(plan.incomes[1].recurrence == .monthly)
+        #expect(plan.incomes[1].paymentStatus == .pending)
+    }
+
     @Test func rejectsUnsupportedFormatVersion() {
         let json = """
         {
