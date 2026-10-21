@@ -101,6 +101,12 @@ struct SettingsView: View {
             }
 
             NavigationLink {
+                MySavingsImportView()
+            } label: {
+                Label("mysavings.import.settingsLink", systemImage: "square.and.arrow.down.on.square")
+            }
+
+            NavigationLink {
                 ReportsView()
             } label: {
                 Label("Reports", systemImage: "chart.bar.doc.horizontal")

@@ -88,7 +88,7 @@ struct TransactionsView: View {
             }
             .navigationTitle("tab.transactions")
             .toolbar {
-                ToolbarOverflowMenu {
+                ToolbarItemGroup(placement: .secondaryAction) {
                     NavigationLink {
                         IncomesView()
                     } label: {
@@ -100,20 +100,20 @@ struct TransactionsView: View {
                     } label: {
                         Label("statistics.title", systemImage: "chart.bar.xaxis")
                     }
+                }
 
+                ToolbarItemGroup(placement: .primaryAction) {
                     Button {
                         showsFilters = true
                     } label: {
-                        Label(
-                            "transactions.filter",
-                            systemImage: hasActiveFilters
+                        Image(
+                            systemName: hasActiveFilters
                                 ? "line.3.horizontal.decrease.circle.fill"
                                 : "line.3.horizontal.decrease.circle"
                         )
                     }
-                }
+                    .accessibilityLabel("transactions.filter")
 
-                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button("transaction.new.title", systemImage: "cart.badge.plus") {
                             showsNewTransaction = true
