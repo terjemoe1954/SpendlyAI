@@ -6,6 +6,7 @@ final class Transaction {
     var amount: Decimal
     var date: Date
     var category: SpendingCategory
+    var customCategoryName: String?
     var transactionDescription: String
     var isEssential: Bool
     var notes: String?
@@ -26,6 +27,7 @@ final class Transaction {
         amount: Decimal,
         date: Date = .now,
         category: SpendingCategory = .other,
+        customCategoryName: String? = nil,
         transactionDescription: String = "",
         isEssential: Bool = false,
         notes: String? = nil,
@@ -36,6 +38,7 @@ final class Transaction {
         self.amount = amount
         self.date = date
         self.category = category
+        self.customCategoryName = customCategoryName
         self.transactionDescription = transactionDescription
         self.isEssential = isEssential
         self.notes = notes

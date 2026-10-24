@@ -325,7 +325,11 @@ private struct FixedExpenseRow: View {
                 }
 
                 HStack(spacing: 4) {
-                    Text(expense.category.titleKey)
+                    if let customCategoryName = expense.customCategoryName {
+                        Text(verbatim: customCategoryName)
+                    } else {
+                        Text(expense.category.titleKey)
+                    }
                     Text("·")
                     Text(expense.recurrence.titleKey)
                 }
@@ -368,6 +372,7 @@ private struct FixedExpenseEditorState: Identifiable {
 struct FixedExpenseEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \CustomCategory.name) private var customCategories: [CustomCategory]
 
     let expense: FixedExpense?
 
@@ -375,6 +380,7 @@ struct FixedExpenseEditorView: View {
     @State private var amount: String
     @State private var dueDate: Date
     @State private var category: ExpenseCategory
+    @State private var customCategoryName: String?
     @State private var recurrence: ExpenseRecurrence
     @State private var customRecurrenceMonths: Int
     @State private var isActive: Bool
@@ -387,6 +393,7 @@ struct FixedExpenseEditorView: View {
         _amount = State(initialValue: expense?.amount.description ?? "")
         _dueDate = State(initialValue: expense?.dueDate ?? Self.date(for: expense?.dueDay ?? Calendar.current.component(.day, from: .now)))
         _category = State(initialValue: expense?.category ?? .other)
+        _customCategoryName = State(initialValue: expense?.customCategoryName)
         _recurrence = State(initialValue: expense?.recurrence ?? .monthly)
         _customRecurrenceMonths = State(initialValue: expense?.customRecurrenceMonths ?? 1)
         _isActive = State(initialValue: expense?.isActive ?? true)
@@ -426,6 +433,15 @@ struct FixedExpenseEditorView: View {
                         ForEach(ExpenseCategory.allCases, id: \.self) { category in
                             Text(category.titleKey)
                                 .tag(category)
+                        }
+                    }
+
+                    if !customCategories.isEmpty {
+                        Picker("categories.custom.section", selection: $customCategoryName) {
+                            Text("categories.none").tag(nil as String?)
+                            ForEach(customCategories) { custom in
+                                Text(verbatim: custom.name).tag(custom.name as String?)
+                            }
                         }
                     }
 
@@ -478,6 +494,7 @@ struct FixedExpenseEditorView: View {
             expense.amount = parsedAmount
             expense.dueDay = dueDay
             expense.category = category
+            expense.customCategoryName = customCategoryName
             expense.recurrence = recurrence
             expense.customRecurrenceMonths = customRecurrenceMonths
             expense.isActive = isActive
@@ -490,6 +507,7 @@ struct FixedExpenseEditorView: View {
                 amount: parsedAmount,
                 dueDay: dueDay,
                 category: category,
+                customCategoryName: customCategoryName,
                 recurrence: recurrence,
                 customRecurrenceMonths: customRecurrenceMonths,
                 isActive: isActive,

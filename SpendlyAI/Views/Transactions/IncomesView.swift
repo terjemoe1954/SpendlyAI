@@ -96,7 +96,11 @@ private struct IncomeRow: View {
                 }
 
                 HStack(spacing: 6) {
-                    Text(income.category.titleKey)
+                    if let customCategoryName = income.customCategoryName {
+                        Text(verbatim: customCategoryName)
+                    } else {
+                        Text(income.category.titleKey)
+                    }
                     Text(income.dueDate ?? income.date, format: .dateTime.day().month().year())
                     if income.recurrence != .oneTime {
                         Text(income.recurrence.titleKey)
@@ -137,11 +141,13 @@ private struct IncomeEditorState: Identifiable {
 struct IncomeEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query(sort: \CustomCategory.name) private var customCategories: [CustomCategory]
 
     let income: Income?
 
     @State private var amount: String
     @State private var category: IncomeCategory
+    @State private var customCategoryName: String?
     @State private var incomeDescription: String
     @State private var notes: String
     @State private var recurrence: IncomeRecurrence
@@ -154,6 +160,7 @@ struct IncomeEditorView: View {
         self.income = income
         _amount = State(initialValue: income?.amount.description ?? "")
         _category = State(initialValue: income?.category.normalizedCategory ?? .income)
+        _customCategoryName = State(initialValue: income?.customCategoryName)
         _incomeDescription = State(initialValue: income?.incomeDescription ?? "")
         _notes = State(initialValue: income?.notes ?? "")
         _recurrence = State(initialValue: income?.recurrence ?? .oneTime)
@@ -196,6 +203,15 @@ struct IncomeEditorView: View {
                         ForEach(IncomeCategory.allCases, id: \.self) { category in
                             Text(category.titleKey)
                                 .tag(category)
+                        }
+                    }
+
+                    if !customCategories.isEmpty {
+                        Picker("categories.custom.section", selection: $customCategoryName) {
+                            Text("categories.none").tag(nil as String?)
+                            ForEach(customCategories) { custom in
+                                Text(verbatim: custom.name).tag(custom.name as String?)
+                            }
                         }
                     }
 
@@ -257,6 +273,7 @@ struct IncomeEditorView: View {
         if let income {
             income.amount = parsedAmount
             income.category = category
+            income.customCategoryName = customCategoryName
             income.incomeDescription = trimmedDescription
             income.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
             income.recurrence = recurrence
@@ -270,6 +287,7 @@ struct IncomeEditorView: View {
                     amount: parsedAmount,
                     date: .now,
                     category: category,
+                    customCategoryName: customCategoryName,
                     incomeDescription: trimmedDescription,
                     notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
                     recurrence: recurrence,

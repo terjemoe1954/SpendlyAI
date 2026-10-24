@@ -24,6 +24,7 @@ struct SpendlyAIApp: App {
             Income.self,
             SavingsGoal.self,
             DailyBudgetSnapshot.self
+            , CustomCategory.self
         ])
     }
 }

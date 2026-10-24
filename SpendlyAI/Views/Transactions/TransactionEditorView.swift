@@ -10,11 +10,13 @@ struct TransactionEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Transaction.date, order: .reverse) private var existingTransactions: [Transaction]
+    @Query(sort: \CustomCategory.name) private var customCategories: [CustomCategory]
 
     private let transaction: Transaction?
 
     @State private var amount: String
     @State private var category: SpendingCategory
+    @State private var customCategoryName: String?
     @State private var transactionDescription: String
     @State private var dueDate: Date
     @State private var settledDate: Date
@@ -32,6 +34,7 @@ struct TransactionEditorView: View {
         self.transaction = transaction
         _amount = State(initialValue: transaction?.amount.description ?? "")
         _category = State(initialValue: transaction?.category ?? .other)
+        _customCategoryName = State(initialValue: transaction?.customCategoryName)
         _transactionDescription = State(initialValue: transaction?.transactionDescription ?? "")
         _dueDate = State(initialValue: transaction?.dueDate ?? transaction?.date ?? .now)
         _settledDate = State(initialValue: transaction?.settledDate ?? transaction?.date ?? .now)
@@ -110,6 +113,7 @@ struct TransactionEditorView: View {
             ForEach(SpendingCategory.allCases, id: \.self) { option in
                 Button {
                     category = option
+                    customCategoryName = nil
                     suggestedCategory = nil
                     hasSelectedCategoryManually = true
                 } label: {
@@ -117,6 +121,24 @@ struct TransactionEditorView: View {
                         Label(option.titleKey, systemImage: "checkmark")
                     } else {
                         Text(option.titleKey)
+                    }
+                }
+            }
+
+            if !customCategories.isEmpty {
+                Divider()
+                ForEach(customCategories) { custom in
+                    Button {
+                        category = .other
+                        customCategoryName = custom.name
+                        suggestedCategory = nil
+                        hasSelectedCategoryManually = true
+                    } label: {
+                        if customCategoryName == custom.name {
+                            Label(custom.name, systemImage: "checkmark")
+                        } else {
+                            Label(custom.name, systemImage: custom.systemImage)
+                        }
                     }
                 }
             }
@@ -128,8 +150,13 @@ struct TransactionEditorView: View {
                             .foregroundStyle(AppStyle.accentColor)
                             .accessibilityHidden(true)
                     }
-                    Text(category.titleKey)
-                        .foregroundStyle(.secondary)
+                    if let customCategoryName {
+                        Text(verbatim: customCategoryName)
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text(category.titleKey)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             .contentShape(Rectangle())
@@ -220,6 +247,7 @@ struct TransactionEditorView: View {
         if let transaction {
             transaction.amount = decimalAmount
             transaction.category = category
+            transaction.customCategoryName = customCategoryName
             transaction.transactionDescription = trimmedDescription
             transaction.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
             transaction.dueDate = dueDate
@@ -230,6 +258,7 @@ struct TransactionEditorView: View {
                 amount: decimalAmount,
                 date: .now,
                 category: category,
+                customCategoryName: customCategoryName,
                 transactionDescription: trimmedDescription,
                 isEssential: false,
                 notes: trimmedNotes.isEmpty ? nil : trimmedNotes,

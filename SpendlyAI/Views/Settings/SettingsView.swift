@@ -107,9 +107,21 @@ struct SettingsView: View {
             }
 
             NavigationLink {
+                CategoryManagementView()
+            } label: {
+                Label("categories.manage", systemImage: "tag")
+            }
+
+            NavigationLink {
                 ReportsView()
             } label: {
                 Label("Reports", systemImage: "chart.bar.doc.horizontal")
+            }
+
+            NavigationLink {
+                UnpaidBillsView()
+            } label: {
+                Label("unpaid.title", systemImage: "calendar.badge.exclamationmark")
             }
 
             NavigationLink {

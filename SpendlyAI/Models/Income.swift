@@ -7,6 +7,7 @@ final class Income {
     var amount: Decimal
     var date: Date
     var category: IncomeCategory
+    var customCategoryName: String?
     var incomeDescription: String
     var notes: String?
     var recurrence: IncomeRecurrence = IncomeRecurrence.oneTime
@@ -28,6 +29,7 @@ final class Income {
         amount: Decimal,
         date: Date = .now,
         category: IncomeCategory = .other,
+        customCategoryName: String? = nil,
         incomeDescription: String = "",
         notes: String? = nil,
         recurrence: IncomeRecurrence = .oneTime,
@@ -39,6 +41,7 @@ final class Income {
         self.amount = amount
         self.date = date
         self.category = category
+        self.customCategoryName = customCategoryName
         self.incomeDescription = incomeDescription
         self.notes = notes
         self.recurrence = recurrence

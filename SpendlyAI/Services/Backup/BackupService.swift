@@ -13,6 +13,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
     let incomes: [IncomeRecord]
     let fixedExpenses: [FixedExpenseRecord]
     let savingsGoals: [SavingsGoalRecord]
+    let customCategories: [CustomCategoryRecord]
 
     struct ProfileRecord: Codable, Equatable, Sendable {
         let monthlyNetIncome: String
@@ -29,6 +30,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let amount: String
         let date: Date
         let category: SpendingCategory
+        let customCategoryName: String?
         let transactionDescription: String
         let isEssential: Bool
         let notes: String?
@@ -41,6 +43,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let amount: String
         let date: Date
         let category: IncomeCategory
+        let customCategoryName: String?
         let incomeDescription: String
         let notes: String?
         let recurrence: IncomeRecurrence
@@ -53,6 +56,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             amount: String,
             date: Date,
             category: IncomeCategory,
+            customCategoryName: String? = nil,
             incomeDescription: String,
             notes: String?,
             recurrence: IncomeRecurrence = .oneTime,
@@ -64,6 +68,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             self.amount = amount
             self.date = date
             self.category = category
+            self.customCategoryName = customCategoryName
             self.incomeDescription = incomeDescription
             self.notes = notes
             self.recurrence = recurrence
@@ -74,7 +79,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         }
 
         private enum CodingKeys: String, CodingKey {
-            case amount, date, category, incomeDescription, notes, recurrence, isActive
+            case amount, date, category, customCategoryName, incomeDescription, notes, recurrence, isActive
             case dueDate, settledDate, paymentStatus
         }
 
@@ -83,6 +88,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             amount = try container.decode(String.self, forKey: .amount)
             date = try container.decode(Date.self, forKey: .date)
             category = try container.decode(IncomeCategory.self, forKey: .category)
+            customCategoryName = try container.decodeIfPresent(String.self, forKey: .customCategoryName)
             incomeDescription = try container.decode(String.self, forKey: .incomeDescription)
             notes = try container.decodeIfPresent(String.self, forKey: .notes)
             recurrence = try container.decodeIfPresent(IncomeRecurrence.self, forKey: .recurrence) ?? .oneTime
@@ -98,12 +104,18 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let amount: String
         let dueDay: Int
         let category: ExpenseCategory
+        let customCategoryName: String?
         let recurrence: ExpenseRecurrence
         let customRecurrenceMonths: Int?
         let isActive: Bool
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus?
+    }
+
+    struct CustomCategoryRecord: Codable, Equatable, Sendable {
+        let name: String
+        let systemImage: String
     }
 
     struct SavingsGoalRecord: Codable, Equatable, Sendable {
@@ -123,6 +135,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         incomes: [IncomeRecord] = [],
         fixedExpenses: [FixedExpenseRecord],
         savingsGoals: [SavingsGoalRecord]
+        , customCategories: [CustomCategoryRecord] = []
     ) {
         self.formatVersion = formatVersion
         self.createdAt = createdAt
@@ -131,10 +144,11 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         self.incomes = incomes
         self.fixedExpenses = fixedExpenses
         self.savingsGoals = savingsGoals
+        self.customCategories = customCategories
     }
 
     private enum CodingKeys: String, CodingKey {
-        case formatVersion, createdAt, profile, transactions, incomes, fixedExpenses, savingsGoals
+        case formatVersion, createdAt, profile, transactions, incomes, fixedExpenses, savingsGoals, customCategories
     }
 
     init(from decoder: any Decoder) throws {
@@ -146,6 +160,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         incomes = try container.decodeIfPresent([IncomeRecord].self, forKey: .incomes) ?? []
         fixedExpenses = try container.decode([FixedExpenseRecord].self, forKey: .fixedExpenses)
         savingsGoals = try container.decode([SavingsGoalRecord].self, forKey: .savingsGoals)
+        customCategories = try container.decodeIfPresent([CustomCategoryRecord].self, forKey: .customCategories) ?? []
     }
 
     var summary: BackupSummary {
@@ -204,6 +219,7 @@ struct BackupService {
         incomes: [Income] = [],
         fixedExpenses: [FixedExpense],
         savingsGoals: [SavingsGoal],
+        customCategories: [CustomCategory] = [],
         createdAt: Date = .now
     ) -> SpendlyBackup {
         SpendlyBackup(
@@ -226,6 +242,7 @@ struct BackupService {
                     amount: decimalString($0.amount),
                     date: $0.date,
                     category: $0.category,
+                    customCategoryName: $0.customCategoryName,
                     transactionDescription: $0.transactionDescription,
                     isEssential: $0.isEssential,
                     notes: $0.notes,
@@ -239,6 +256,7 @@ struct BackupService {
                     amount: decimalString($0.amount),
                     date: $0.date,
                     category: $0.category,
+                    customCategoryName: $0.customCategoryName,
                     incomeDescription: $0.incomeDescription,
                     notes: $0.notes,
                     recurrence: $0.recurrence,
@@ -254,6 +272,7 @@ struct BackupService {
                     amount: decimalString($0.amount),
                     dueDay: $0.dueDay,
                     category: $0.category,
+                    customCategoryName: $0.customCategoryName,
                     recurrence: $0.recurrence,
                     customRecurrenceMonths: $0.customRecurrenceMonths,
                     isActive: $0.isActive,
@@ -271,7 +290,8 @@ struct BackupService {
                     priority: $0.priority,
                     isCompleted: $0.isCompleted
                 )
-            }
+            },
+            customCategories: customCategories.map { .init(name: $0.name, systemImage: $0.systemImage) }
         )
     }
 
@@ -317,6 +337,7 @@ struct BackupService {
                 try modelContext.delete(model: Income.self)
                 try modelContext.delete(model: FixedExpense.self)
                 try modelContext.delete(model: SavingsGoal.self)
+                try modelContext.delete(model: CustomCategory.self)
 
                 if let profile = backup.profile {
                     modelContext.insert(UserFinancialProfile(
@@ -336,6 +357,7 @@ struct BackupService {
                         amount: decimal(item.amount)!,
                         date: item.date,
                         category: item.category,
+                        customCategoryName: item.customCategoryName,
                         transactionDescription: item.transactionDescription,
                         isEssential: item.isEssential,
                         notes: item.notes,
@@ -350,6 +372,7 @@ struct BackupService {
                         amount: decimal(item.amount)!,
                         date: item.date,
                         category: item.category,
+                        customCategoryName: item.customCategoryName,
                         incomeDescription: item.incomeDescription,
                         notes: item.notes,
                         recurrence: item.recurrence,
@@ -366,6 +389,7 @@ struct BackupService {
                         amount: decimal(item.amount)!,
                         dueDay: item.dueDay,
                         category: item.category,
+                        customCategoryName: item.customCategoryName,
                         recurrence: item.recurrence,
                         customRecurrenceMonths: item.customRecurrenceMonths ?? 1,
                         isActive: item.isActive,
@@ -384,6 +408,10 @@ struct BackupService {
                         priority: item.priority,
                         isCompleted: item.isCompleted
                     ))
+                }
+
+                for item in backup.customCategories {
+                    modelContext.insert(CustomCategory(name: item.name, systemImage: item.systemImage))
                 }
             }
         } catch {

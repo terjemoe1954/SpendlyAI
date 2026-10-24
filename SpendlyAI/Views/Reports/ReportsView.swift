@@ -168,6 +168,14 @@ struct ReportsView: View {
 
     var body: some View {
         Form {
+            Section {
+                NavigationLink {
+                    UnpaidBillsView()
+                } label: {
+                    Label("unpaid.title", systemImage: "calendar.badge.exclamationmark")
+                }
+            }
+
             Section("Period") {
                 DatePicker(
                     "From",

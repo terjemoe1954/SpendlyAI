@@ -11,6 +11,7 @@ struct TransactionsView: View {
     @Query(sort: \Transaction.date, order: .reverse) private var transactions: [Transaction]
     @Query(sort: \Income.date, order: .reverse) private var incomes: [Income]
     @Query private var fixedExpenses: [FixedExpense]
+    @Query(sort: \CustomCategory.name) private var customCategories: [CustomCategory]
     @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
     @State private var showsNewTransaction = false
@@ -23,6 +24,7 @@ struct TransactionsView: View {
     @State private var periodFilter: ActivityPeriodFilter = .all
     @State private var statusFilter: PaymentStatus?
     @State private var categoryFilter: ActivityCategory?
+    @State private var customCategoryFilter: String?
     @State private var minimumAmount = ""
     @State private var maximumAmount = ""
 
@@ -54,7 +56,8 @@ struct TransactionsView: View {
         return items.filter { item in
             periodFilter.contains(item.date)
                 && (statusFilter == nil || item.paymentStatus == statusFilter)
-                && (categoryFilter == nil || item.category == categoryFilter)
+                && (customCategoryFilter.map { item.customCategoryName == $0 }
+                    ?? (categoryFilter == nil || item.category == categoryFilter))
                 && minimum.map { item.amount >= $0 } != false
                 && maximum.map { item.amount <= $0 } != false
         }
@@ -62,14 +65,32 @@ struct TransactionsView: View {
 
     private var hasActiveFilters: Bool {
         periodFilter != .all || statusFilter != nil || categoryFilter != nil
+            || customCategoryFilter != nil
             || MoneyParser.decimal(from: minimumAmount) != nil
             || MoneyParser.decimal(from: maximumAmount) != nil
             || activityFilter != .all
     }
 
+    private var filteredSummary: ActivitySummary {
+        activityItems.reduce(into: ActivitySummary()) { result, item in
+            switch item {
+            case .income:
+                result.incoming += item.amount
+                if item.paymentStatus == .pending || item.paymentStatus == .overdue {
+                    result.receivable += item.amount
+                }
+            case .purchase, .fixedExpense:
+                result.outgoing += item.amount
+            }
+            result.count += 1
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            Group {
+            VStack(spacing: 0) {
+                ActivitySummaryView(summary: filteredSummary, currencyCode: currencyCode)
+
                 if activityItems.isEmpty {
                     ContentUnavailableView(
                         "transactions.empty.title",
@@ -133,6 +154,8 @@ struct TransactionsView: View {
                     periodFilter: $periodFilter,
                     statusFilter: $statusFilter,
                     categoryFilter: $categoryFilter,
+                    customCategoryFilter: $customCategoryFilter,
+                    customCategories: customCategories,
                     minimumAmount: $minimumAmount,
                     maximumAmount: $maximumAmount
                 )
@@ -173,6 +196,7 @@ struct TransactionsView: View {
                 amount: transaction.amount,
                 date: transaction.date,
                 category: transaction.category,
+                customCategoryName: transaction.customCategoryName,
                 transactionDescription: transaction.transactionDescription,
                 isEssential: transaction.isEssential,
                 notes: transaction.notes,
@@ -188,6 +212,7 @@ struct TransactionsView: View {
                 amount: income.amount,
                 date: income.date,
                 category: income.category,
+                customCategoryName: income.customCategoryName,
                 incomeDescription: income.incomeDescription,
                 notes: income.notes,
                 recurrence: income.recurrence,
@@ -205,6 +230,7 @@ struct TransactionsView: View {
                 amount: expense.amount,
                 dueDay: expense.dueDay,
                 category: expense.category,
+                customCategoryName: expense.customCategoryName,
                 recurrence: expense.recurrence,
                 customRecurrenceMonths: expense.customRecurrenceMonths,
                 isActive: expense.isActive,
@@ -319,6 +345,50 @@ struct TransactionsView: View {
     }
 }
 
+private struct ActivitySummary {
+    var incoming = Decimal.zero
+    var outgoing = Decimal.zero
+    var receivable = Decimal.zero
+    var count = 0
+}
+
+private struct ActivitySummaryView: View {
+    @Environment(\.locale) private var locale
+
+    let summary: ActivitySummary
+    let currencyCode: String
+
+    var body: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AppSpacing.small) {
+            metric("transactions.summary.in", value: money(summary.incoming), color: .green)
+            metric("transactions.summary.out", value: money(summary.outgoing), color: .red)
+            metric("transactions.summary.receivable", value: money(summary.receivable), color: .orange)
+            metric("transactions.summary.count", value: String(summary.count), color: .secondary)
+        }
+        .padding(.horizontal)
+        .padding(.vertical, AppSpacing.small)
+        .background(.bar)
+    }
+
+    private func metric(_ titleKey: LocalizedStringKey, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(titleKey)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.headline)
+                .foregroundStyle(color)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(AppSpacing.small)
+        .background(.background, in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func money(_ amount: Decimal) -> String {
+        MoneyFormatter.string(from: amount, currencyCode: currencyCode, locale: locale)
+    }
+}
+
 private struct TransactionFilterView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
@@ -327,6 +397,8 @@ private struct TransactionFilterView: View {
     @Binding var periodFilter: ActivityPeriodFilter
     @Binding var statusFilter: PaymentStatus?
     @Binding var categoryFilter: ActivityCategory?
+    @Binding var customCategoryFilter: String?
+    let customCategories: [CustomCategory]
     @Binding var minimumAmount: String
     @Binding var maximumAmount: String
 
@@ -374,6 +446,17 @@ private struct TransactionFilterView: View {
                     }
                 }
 
+                if !customCategories.isEmpty {
+                    Section("categories.custom.section") {
+                        Picker("categories.custom.section", selection: $customCategoryFilter) {
+                            Text("filter.allCategories").tag(nil as String?)
+                            ForEach(customCategories) { category in
+                                Text(verbatim: category.name).tag(category.name as String?)
+                            }
+                        }
+                    }
+                }
+
                 Section("filter.amount") {
                     TextField("filter.minimumAmount", text: $minimumAmount)
                     TextField("filter.maximumAmount", text: $maximumAmount)
@@ -385,6 +468,7 @@ private struct TransactionFilterView: View {
                         periodFilter = .all
                         statusFilter = nil
                         categoryFilter = nil
+                        customCategoryFilter = nil
                         minimumAmount = ""
                         maximumAmount = ""
                     }
@@ -406,6 +490,7 @@ private enum ActivityPeriodFilter: String, CaseIterable, Identifiable {
     case all
     case today
     case thisMonth
+    case nextMonth
     case previousMonth
     case thisYear
 
@@ -416,6 +501,7 @@ private enum ActivityPeriodFilter: String, CaseIterable, Identifiable {
         case .all: "filter.period.all"
         case .today: "filter.period.today"
         case .thisMonth: "filter.period.thisMonth"
+        case .nextMonth: "filter.period.nextMonth"
         case .previousMonth: "filter.period.previousMonth"
         case .thisYear: "filter.period.thisYear"
         }
@@ -429,6 +515,9 @@ private enum ActivityPeriodFilter: String, CaseIterable, Identifiable {
             calendar.isDate(date, inSameDayAs: now)
         case .thisMonth:
             calendar.isDate(date, equalTo: now, toGranularity: .month)
+        case .nextMonth:
+            calendar.date(byAdding: .month, value: 1, to: now)
+                .map { calendar.isDate(date, equalTo: $0, toGranularity: .month) } ?? false
         case .previousMonth:
             calendar.date(byAdding: .month, value: -1, to: now)
                 .map { calendar.isDate(date, equalTo: $0, toGranularity: .month) } ?? false
@@ -581,6 +670,14 @@ private enum ActivityItem: Identifiable {
             }
         }
     }
+
+    var customCategoryName: String? {
+        switch self {
+        case .purchase(let transaction): transaction.customCategoryName
+        case .income(let income): income.customCategoryName
+        case .fixedExpense(let expense, _): expense.customCategoryName
+        }
+    }
 }
 
 private struct ActivityList: View {
@@ -638,6 +735,7 @@ private struct ActivityRow: View {
                 title: transaction.transactionDescription,
                 untitledKey: "transaction.untitled",
                 categoryKey: transaction.category.titleKey,
+                customCategoryName: transaction.customCategoryName,
                 date: transaction.dueDate ?? transaction.date,
                 amount: transaction.amount,
                 currencyCode: currencyCode,
@@ -650,6 +748,7 @@ private struct ActivityRow: View {
                 title: income.incomeDescription,
                 untitledKey: "income.untitled",
                 categoryKey: income.category.titleKey,
+                customCategoryName: income.customCategoryName,
                 date: income.dueDate ?? income.date,
                 amount: income.amount,
                 currencyCode: currencyCode,
@@ -690,7 +789,11 @@ private struct FixedExpenseActivityRowContent: View {
                     .font(.body.weight(.medium))
 
                 HStack(spacing: 6) {
-                    Text(expense.category.activityTitleKey)
+                    if let customCategoryName = expense.customCategoryName {
+                        Text(verbatim: customCategoryName)
+                    } else {
+                        Text(expense.category.activityTitleKey)
+                    }
                     Text(expense.recurrence.activityTitleKey)
                     Text(dueDate, format: .dateTime.day().month())
                 }
@@ -724,6 +827,7 @@ private struct ActivityRowContent: View {
     let title: String
     let untitledKey: LocalizedStringKey
     let categoryKey: LocalizedStringKey
+    let customCategoryName: String?
     let date: Date
     let amount: Decimal
     let currencyCode: String
@@ -752,7 +856,11 @@ private struct ActivityRowContent: View {
                 }
 
                 HStack(spacing: 6) {
-                    Text(categoryKey)
+                    if let customCategoryName {
+                        Text(verbatim: customCategoryName)
+                    } else {
+                        Text(categoryKey)
+                    }
                     Text(date, format: .dateTime.day().month().hour().minute())
                 }
                 .font(.caption)

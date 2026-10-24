@@ -32,6 +32,7 @@ struct BackupRestoreView: View {
     @Query private var incomes: [Income]
     @Query private var fixedExpenses: [FixedExpense]
     @Query private var savingsGoals: [SavingsGoal]
+    @Query private var customCategories: [CustomCategory]
 
     @State private var exportDocument: BackupDocument?
     @State private var isExporting = false
@@ -187,6 +188,7 @@ struct BackupRestoreView: View {
                 incomes: incomes,
                 fixedExpenses: fixedExpenses,
                 savingsGoals: savingsGoals
+                , customCategories: customCategories
             )
             exportFilename = makeExportFilename()
             exportDocument = BackupDocument(data: try backupService.encode(backup))

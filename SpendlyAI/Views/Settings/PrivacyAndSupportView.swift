@@ -15,6 +15,7 @@ struct PrivacyAndSupportView: View {
     @Query private var incomes: [Income]
     @Query private var savingsGoals: [SavingsGoal]
     @Query private var dailyBudgetSnapshots: [DailyBudgetSnapshot]
+    @Query private var customCategories: [CustomCategory]
 
     @AppStorage(NotificationSettingsStorage.dailyReminderEnabledKey) private var dailyReminderEnabled = false
     @AppStorage(NotificationSettingsStorage.dailyReminderHourKey) private var dailyReminderHour = NotificationSettingsStorage.defaultReminderHour
@@ -137,6 +138,7 @@ struct PrivacyAndSupportView: View {
             incomes,
             savingsGoals,
             dailyBudgetSnapshots
+            , customCategories
         ]
 
         for models in modelsToDelete {
