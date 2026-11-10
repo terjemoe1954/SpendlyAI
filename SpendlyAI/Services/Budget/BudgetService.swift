@@ -271,14 +271,17 @@ extension BudgetService {
         incomes: [Income] = [],
         today: Date = .now
     ) -> BudgetInput {
-        let additionalIncome = sumRealizedAdditionalIncome(
+        let realizedIncome = sumRealizedIncome(
             incomes,
             from: profile.budgetPeriodStart,
             through: min(today, profile.budgetPeriodEnd)
         )
+        let availableMoney = realizedIncome.primary > 0
+            ? realizedIncome.primary + realizedIncome.additional
+            : profile.monthlyNetIncome + realizedIncome.additional
 
         return BudgetInput(
-            availableMoney: profile.monthlyNetIncome + additionalIncome,
+            availableMoney: availableMoney,
             periodStart: profile.budgetPeriodStart,
             nextIncomeDate: profile.budgetPeriodEnd,
             fixedExpenses: fixedExpenses.filter(\.category.countsAsSpending).map { expense in
@@ -311,37 +314,42 @@ extension BudgetService {
         )
     }
 
-    private func sumRealizedAdditionalIncome(
+    private func sumRealizedIncome(
         _ incomes: [Income],
         from periodStart: Date,
         through endDate: Date
-    ) -> Decimal {
+    ) -> (primary: Decimal, additional: Decimal) {
         let normalizedPeriodStart = calendar.startOfDay(for: periodStart)
         let normalizedEndDate = calendar.startOfDay(for: endDate)
-        guard normalizedEndDate >= normalizedPeriodStart else { return 0 }
+        guard normalizedEndDate >= normalizedPeriodStart else { return (0, 0) }
 
-        return incomes.reduce(0) { total, income in
+        return incomes.reduce(into: (primary: Decimal.zero, additional: Decimal.zero)) { totals, income in
             guard income.isActive,
-                  income.category != .salary,
                   income.category.countsAsIncome,
                   income.paymentStatus == .settled || income.paymentStatus == .withdrawn else {
-                return total
+                return
             }
             let normalizedIncomeDate = calendar.startOfDay(for: income.settledDate ?? income.date)
+            let isPrimaryIncome = income.category.normalizedCategory == .income
 
             if income.recurrence == .oneTime {
                 guard normalizedIncomeDate >= normalizedPeriodStart,
                       normalizedIncomeDate <= normalizedEndDate else {
-                    return total
+                    return
                 }
-                return total + income.amount
+                if isPrimaryIncome {
+                    totals.primary += income.amount
+                } else {
+                    totals.additional += income.amount
+                }
+                return
             }
 
             var occurrence = normalizedIncomeDate
             while occurrence < normalizedPeriodStart {
                 guard let next = nextIncomeDate(after: occurrence, recurrence: income.recurrence),
                       next > occurrence else {
-                    return total
+                    return
                 }
                 occurrence = next
             }
@@ -355,7 +363,11 @@ extension BudgetService {
                 }
                 occurrence = next
             }
-            return total + incomeTotal
+            if isPrimaryIncome {
+                totals.primary += incomeTotal
+            } else {
+                totals.additional += incomeTotal
+            }
         }
     }
 

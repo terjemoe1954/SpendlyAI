@@ -17,7 +17,12 @@ final class Income {
     var paymentStatusRawValue: String?
 
     var paymentStatus: PaymentStatus {
-        get { paymentStatusRawValue.flatMap(PaymentStatus.init(rawValue:)) ?? .settled }
+        get {
+            if let status = paymentStatusRawValue.flatMap(PaymentStatus.init(rawValue:)) {
+                return status
+            }
+            return dueDate != nil && settledDate == nil ? .pending : .settled
+        }
         set { paymentStatusRawValue = newValue.rawValue }
     }
 

@@ -72,17 +72,100 @@ struct TransactionsView: View {
     }
 
     private var filteredSummary: ActivitySummary {
-        activityItems.reduce(into: ActivitySummary()) { result, item in
+        var summary = activityItems.reduce(into: ActivitySummary()) { result, item in
             switch item {
             case .income:
                 result.incoming += item.amount
-                if item.paymentStatus == .pending || item.paymentStatus == .overdue {
-                    result.receivable += item.amount
-                }
             case .purchase, .fixedExpense:
                 result.outgoing += item.amount
             }
             result.count += 1
+        }
+        summary.receivable = filteredReceivableIncome
+        return summary
+    }
+
+    private var filteredReceivableIncome: Decimal {
+        guard activityFilter == .all || activityFilter == .incomes else { return 0 }
+
+        return incomes.reduce(Decimal.zero) { total, income in
+            guard income.isActive, income.category.countsAsIncome else { return total }
+
+            let status = income.effectivePaymentStatus()
+            if status == .pending || status == .overdue {
+                let date = income.dueDate ?? income.date
+                return matchesIncomeFilters(income, date: date, status: status)
+                    ? total + income.amount
+                    : total
+            }
+
+            guard status == .settled,
+                  income.recurrence != .oneTime,
+                  let nextDate = nextPendingIncomeDate(for: income) else {
+                return total
+            }
+            let nextStatus = PaymentStatus.pending.effectiveStatus(dueDate: nextDate)
+            return matchesIncomeFilters(income, date: nextDate, status: nextStatus)
+                ? total + income.amount
+                : total
+        }
+    }
+
+    private func matchesIncomeFilters(
+        _ income: Income,
+        date: Date,
+        status: PaymentStatus
+    ) -> Bool {
+        let category = ActivityItem.income(income).category
+        let minimum = MoneyParser.decimal(from: minimumAmount)
+        let maximum = MoneyParser.decimal(from: maximumAmount)
+        return periodFilter.contains(date)
+            && (statusFilter == nil || statusFilter == status)
+            && (customCategoryFilter.map { income.customCategoryName == $0 }
+                ?? (categoryFilter == nil || categoryFilter == category))
+            && minimum.map { income.amount >= $0 } != false
+            && maximum.map { income.amount <= $0 } != false
+    }
+
+    private func nextPendingIncomeDate(for income: Income) -> Date? {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        var occurrence = calendar.startOfDay(
+            for: income.settledDate ?? income.dueDate ?? income.date
+        )
+
+        repeat {
+            guard let next = nextIncomeDate(
+                after: occurrence,
+                recurrence: income.recurrence,
+                calendar: calendar
+            ), next > occurrence else {
+                return nil
+            }
+            occurrence = next
+        } while occurrence < today
+
+        return occurrence
+    }
+
+    private func nextIncomeDate(
+        after date: Date,
+        recurrence: IncomeRecurrence,
+        calendar: Calendar
+    ) -> Date? {
+        switch recurrence {
+        case .oneTime:
+            nil
+        case .weekly:
+            calendar.date(byAdding: .day, value: 7, to: date)
+        case .biweekly:
+            calendar.date(byAdding: .day, value: 14, to: date)
+        case .monthly:
+            calendar.date(byAdding: .month, value: 1, to: date)
+        case .quarterly:
+            calendar.date(byAdding: .month, value: 3, to: date)
+        case .yearly:
+            calendar.date(byAdding: .year, value: 1, to: date)
         }
     }
 
