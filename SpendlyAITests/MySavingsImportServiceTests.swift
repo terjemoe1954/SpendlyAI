@@ -141,6 +141,7 @@ struct MySavingsImportServiceTests {
           "categories": [{"id": "income", "name": "Lønn & Inntekt"}],
           "transactions": [
             {
+              "id": "5715B5DE-945E-5294-BD2E-74BEE37A3A4F",
               "amount": "30000", "category": "income",
               "createdAt": "2026-10-20T10:00:00Z", "dueDate": "2026-10-20T10:00:00Z",
               "isArchived": false, "isCompleted": true, "notes": "",
@@ -148,6 +149,7 @@ struct MySavingsImportServiceTests {
               "status": "received", "title": "Pensjon", "type": "income"
             },
             {
+              "id": "94AEE9EB-4851-5318-9798-325D97817011",
               "amount": "30000", "category": "income",
               "createdAt": "2026-10-20T10:00:00Z", "dueDate": "2026-11-20T10:00:00Z",
               "isArchived": false, "isCompleted": false, "notes": "",
@@ -165,6 +167,25 @@ struct MySavingsImportServiceTests {
         #expect(plan.incomes[0].paymentStatus == .settled)
         #expect(plan.incomes[1].recurrence == .monthly)
         #expect(plan.incomes[1].paymentStatus == .pending)
+    }
+
+    @Test func preservesExplicitMonthIntervalsFromMySavings() throws {
+        for months in [3, 5, 6, 12] {
+            let json = """
+            {"formatVersion":4,"exportedAt":"2026-11-16T12:00:00Z",
+             "categories":[{"id":"test","name":"Forsikring"}],
+             "transactions":[{"id":"synthetic-interval","amount":"2000.15","category":"test",
+               "createdAt":"2026-11-16T12:00:00Z","dueDate":"2026-11-19T12:00:00Z",
+               "isArchived":false,"isCompleted":false,"notes":"",
+               "recurrence":"everyNMonths","recurrenceIntervalMonths":\(months),
+               "status":"pending","title":"Synthetic interval","type":"expense"}]}
+            """
+            let plan = try MySavingsImportService().decode(Data(json.utf8))
+            #expect(plan.fixedExpenses.count == 1)
+            #expect(plan.fixedExpenses[0].customRecurrenceMonths == months)
+            #expect(plan.fixedExpenses[0].amount == Decimal(string: "2000.15"))
+            if months == 5 { #expect(plan.fixedExpenses[0].recurrence == .custom) }
+        }
     }
 
     @Test func rejectsUnsupportedFormatVersion() {

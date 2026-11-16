@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import SwiftData
 
 struct MySavingsImportPlan: Identifiable, Equatable, Sendable {
@@ -19,6 +20,7 @@ struct MySavingsImportPlan: Identifiable, Equatable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus
+        var sourceID: String = ""
     }
 
     struct ImportedFixedExpense: Equatable, Sendable {
@@ -29,6 +31,7 @@ struct MySavingsImportPlan: Identifiable, Equatable, Sendable {
         let recurrence: ExpenseRecurrence
         let customRecurrenceMonths: Int
         let dueDate: Date?
+        var sourceID: String = ""
     }
 
     struct ImportedIncome: Equatable, Sendable {
@@ -42,6 +45,7 @@ struct MySavingsImportPlan: Identifiable, Equatable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus
+        var sourceID: String = ""
     }
 
     var totalCount: Int {
@@ -68,7 +72,8 @@ struct MySavingsImportService {
         let name: String
     }
 
-    private struct SourceTransaction: Decodable {
+    private struct SourceTransaction: Codable {
+        let id: String?
         let amount: String
         let category: String
         let createdAt: Date
@@ -78,6 +83,7 @@ struct MySavingsImportService {
         let notes: String
         let paidDate: Date?
         let recurrence: String
+        let recurrenceIntervalMonths: Int?
         let recurrenceAnchorDay: Int?
         let status: String
         let title: String
@@ -99,15 +105,18 @@ struct MySavingsImportService {
             throw MySavingsImportError.unsupportedVersion(payload.formatVersion)
         }
 
-        let categoryNames = Dictionary(
-            uniqueKeysWithValues: payload.categories.map { ($0.id, $0.name) }
-        )
+        guard Set(payload.categories.map(\.id)).count == payload.categories.count else { throw MySavingsImportError.unreadableFile }
+        let ids = payload.transactions.compactMap(\.id)
+        guard Set(ids.map { $0.uppercased() }).count == ids.count else { throw MySavingsImportError.unreadableFile }
+        let categoryNames = Dictionary(uniqueKeysWithValues: payload.categories.map { ($0.id, $0.name) })
         var expenses: [MySavingsImportPlan.Expense] = []
         var incomes: [MySavingsImportPlan.ImportedIncome] = []
         var fixedExpenses: [MySavingsImportPlan.ImportedFixedExpense] = []
         var skippedCount = 0
 
         for item in payload.transactions where !item.isArchived {
+            guard let id = item.id, !id.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw MySavingsImportError.unreadableFile }
+            let sourceID = "mysavings:" + (UUID(uuidString: id)?.uuidString ?? id)
             guard let amount = MoneyParser.decimal(from: item.amount), amount >= 0 else {
                 skippedCount += 1
                 continue
@@ -130,7 +139,8 @@ struct MySavingsImportService {
                         category: expenseCategory(for: sourceCategory),
                         recurrence: recurrence.value,
                         customRecurrenceMonths: recurrence.customMonths,
-                        dueDate: item.dueDate
+                        dueDate: item.dueDate,
+                        sourceID: sourceID
                     ))
                 } else {
                     expenses.append(.init(
@@ -141,7 +151,8 @@ struct MySavingsImportService {
                         notes: notes,
                         dueDate: item.dueDate,
                         settledDate: settledDate,
-                        paymentStatus: status
+                        paymentStatus: status,
+                        sourceID: sourceID
                     ))
                 }
             case "income":
@@ -158,7 +169,8 @@ struct MySavingsImportService {
                     isActive: true,
                     dueDate: item.dueDate,
                     settledDate: settledDate,
-                    paymentStatus: status
+                    paymentStatus: status,
+                    sourceID: sourceID
                 ))
             default:
                 skippedCount += 1
@@ -180,55 +192,9 @@ struct MySavingsImportService {
     }
 
     @MainActor
-    func importPlan(_ plan: MySavingsImportPlan, into modelContext: ModelContext) throws {
-        do {
-            try modelContext.transaction {
-                for item in plan.expenses {
-                    modelContext.insert(Transaction(
-                        amount: item.amount,
-                        date: item.date,
-                        category: item.category,
-                        transactionDescription: item.title,
-                        notes: item.notes,
-                        dueDate: item.dueDate,
-                        settledDate: item.settledDate,
-                        paymentStatus: item.paymentStatus
-                    ))
-                }
-
-                for item in plan.fixedExpenses {
-                    modelContext.insert(FixedExpense(
-                        name: item.name,
-                        amount: item.amount,
-                        dueDay: item.dueDay,
-                        category: item.category,
-                        recurrence: item.recurrence,
-                        customRecurrenceMonths: item.customRecurrenceMonths,
-                        isActive: true,
-                        dueDate: item.dueDate,
-                        paymentStatus: .pending
-                    ))
-                }
-
-                for item in plan.incomes {
-                    modelContext.insert(Income(
-                        amount: item.amount,
-                        date: item.date,
-                        category: item.category,
-                        incomeDescription: item.title,
-                        notes: item.notes,
-                        recurrence: item.recurrence,
-                        isActive: item.isActive,
-                        dueDate: item.dueDate,
-                        settledDate: item.settledDate,
-                        paymentStatus: item.paymentStatus
-                    ))
-                }
-            }
-        } catch {
-            modelContext.rollback()
-            throw error
-        }
+    @discardableResult
+    func importPlan(_ plan: MySavingsImportPlan, into modelContext: ModelContext, linkLegacyMatches: Bool = false, allowNewAlongsideUntracked: Bool = false) throws -> MySavingsImportOutcome {
+        try MySavingsDeduplicatingImport.apply(plan, to: modelContext, linkLegacyMatches: linkLegacyMatches, allowNewAlongsideUntracked: allowNewAlongsideUntracked)
     }
 
     private func paymentStatus(for item: SourceTransaction) -> PaymentStatus {
@@ -255,6 +221,15 @@ struct MySavingsImportService {
     private func expenseRecurrence(
         for item: SourceTransaction
     ) -> (value: ExpenseRecurrence, customMonths: Int) {
+        if let months = item.recurrenceIntervalMonths, months > 0 {
+            switch months {
+            case 1: return (.monthly, 1)
+            case 3: return (.quarterly, 3)
+            case 6: return (.semiannual, 6)
+            case 12: return (.yearly, 12)
+            default: return (.custom, months)
+            }
+        }
         let normalizedNotes = normalized(item.notes)
         if normalizedNotes.contains("12 maneder") {
             return (.yearly, 12)
@@ -273,7 +248,7 @@ struct MySavingsImportService {
             return (.biweekly, 1)
         case "quarterly":
             return (.quarterly, 3)
-        case "semiannual":
+        case "semiannual", "halfyearly":
             return (.semiannual, 6)
         case "yearly", "annual":
             return (.yearly, 12)
@@ -381,6 +356,8 @@ struct MySavingsImportService {
     private func normalized(_ value: String) -> String {
         value
             .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: Locale(identifier: "nb_NO"))
+            .replacingOccurrences(of: "ø", with: "o", options: .caseInsensitive)
+            .replacingOccurrences(of: "æ", with: "ae", options: .caseInsensitive)
             .replacingOccurrences(of: "&", with: " ")
             .replacingOccurrences(of: "-", with: " ")
             .split(whereSeparator: { $0.isWhitespace })

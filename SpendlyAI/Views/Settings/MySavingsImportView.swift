@@ -8,6 +8,9 @@ struct MySavingsImportView: View {
     @State private var isSelectingFile = false
     @State private var pendingPlan: MySavingsImportPlan?
     @State private var isShowingConfirmation = false
+    @State private var linkLegacyMatches = false
+    @State private var allowNewAlongsideUntracked = false
+    @State private var importOutcome: MySavingsImportOutcome?
     @State private var notice: MySavingsImportNotice?
 
     private let importService = MySavingsImportService()
@@ -15,6 +18,10 @@ struct MySavingsImportView: View {
     var body: some View {
         Form {
             Section {
+                Toggle("Knytt til tidligere import (bare helt like poster)", isOn: $linkLegacyMatches)
+                Toggle("Tillat nye poster uten sikkert treff", isOn: $allowNewAlongsideUntracked)
+                Text("Slå bare på dette etter å ha kontrollert at postene ikke finnes fra før. Eldre importer uten kilde-ID kan ellers gi dubletter.").font(.footnote).foregroundStyle(.secondary)
+                Text("Har du importert tidligere? Velg først den opprinnelige filen og slå på dette valget. Tvetydige treff og lokale endringer blir beholdt og vist for kontroll.").font(.footnote).foregroundStyle(.secondary)
                 Button {
                     isSelectingFile = true
                 } label: {
@@ -24,6 +31,17 @@ struct MySavingsImportView: View {
                 Text("mysavings.import.section.title")
             } footer: {
                 Text("mysavings.import.section.footer")
+            }
+            if let outcome = importOutcome {
+                Section("Importresultat") {
+                    Text("Nye: \(outcome.created). Oppdatert: \(outcome.updated). Uendret: \(outcome.unchanged). Knyttet: \(outcome.linked). Eldre fil: \(outcome.olderFilesSkipped). Konflikter: \(outcome.conflicts.count).")
+                    ForEach(outcome.conflicts) { conflict in
+                        VStack(alignment: .leading) {
+                            Text(conflict.title).font(.headline)
+                            Text(conflict.reason).foregroundStyle(.secondary)
+                        }
+                    }
+                }
             }
         }
         .navigationTitle("mysavings.import.title")
@@ -104,9 +122,9 @@ struct MySavingsImportView: View {
         guard let pendingPlan else { return }
 
         do {
-            try importService.importPlan(pendingPlan, into: modelContext)
+            importOutcome = try importService.importPlan(pendingPlan, into: modelContext, linkLegacyMatches: linkLegacyMatches, allowNewAlongsideUntracked: allowNewAlongsideUntracked)
             self.pendingPlan = nil
-            notice = .importSucceeded
+            // Detailed counts and conflicts remain visible in the form.
         } catch {
             notice = .importFailed
         }

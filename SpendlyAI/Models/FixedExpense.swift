@@ -3,6 +3,9 @@ import SwiftData
 
 @Model
 final class FixedExpense {
+    var mySavingsSourceID: String?
+    var mySavingsSourceFingerprint: String?
+    var mySavingsSourceExportedAt: Date?
     var name: String
     var amount: Decimal
     var dueDay: Int
@@ -35,8 +38,14 @@ final class FixedExpense {
         isActive: Bool = true,
         dueDate: Date? = nil,
         settledDate: Date? = nil,
-        paymentStatus: PaymentStatus = .pending
+        paymentStatus: PaymentStatus = .pending,
+        mySavingsSourceID: String? = nil,
+        mySavingsSourceFingerprint: String? = nil,
+        mySavingsSourceExportedAt: Date? = nil
     ) {
+        self.mySavingsSourceID = mySavingsSourceID
+        self.mySavingsSourceFingerprint = mySavingsSourceFingerprint
+        self.mySavingsSourceExportedAt = mySavingsSourceExportedAt
         self.name = name
         self.amount = amount
         self.dueDay = dueDay

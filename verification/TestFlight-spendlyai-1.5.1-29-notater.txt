@@ -1,0 +1,12 @@
+MySavings-import med stabile post-ID-er og beskyttelse mot dobbeltregistreringer.
+
+Test på iPhone, iPad og Mac:
+• Behold originalfilen som referanse. Koble tidligere importer først (i SpendlyAI: «Knytt til tidligere import»).
+• Bruk «Slå sammen» i Saldopilot.
+• Importer den samme nye MySavings-filen to ganger. Andre import skal ikke opprette nye poster eller endre totalsummene.
+• Endre beløp eller betalingsstatus i MySavings, eksporter på nytt og importer. Poster som er uendret lokalt skal oppdateres.
+• Endre en post lokalt før neste kildeendring: importen skal vise konflikt og beholde lokale verdier.
+• En eldre fil skal ikke overskrive nyere importerte verdier.
+• Kontroller at inntekter, utgifter og gjentakelser stemmer etter sikkerhetskopi og gjenoppretting.
+
+Ikke slå på «Tillat nye poster uten sikkert treff» før du har kontrollert at postene faktisk er nye. Tvetydige tidligere importer beholdes for manuell kontroll.

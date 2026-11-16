@@ -4,6 +4,9 @@ import SwiftUI
 
 @Model
 final class Income {
+    var mySavingsSourceID: String?
+    var mySavingsSourceFingerprint: String?
+    var mySavingsSourceExportedAt: Date?
     var amount: Decimal
     var date: Date
     var category: IncomeCategory
@@ -41,8 +44,14 @@ final class Income {
         isActive: Bool = true,
         dueDate: Date? = nil,
         settledDate: Date? = nil,
-        paymentStatus: PaymentStatus = .settled
+        paymentStatus: PaymentStatus = .settled,
+        mySavingsSourceID: String? = nil,
+        mySavingsSourceFingerprint: String? = nil,
+        mySavingsSourceExportedAt: Date? = nil
     ) {
+        self.mySavingsSourceID = mySavingsSourceID
+        self.mySavingsSourceFingerprint = mySavingsSourceFingerprint
+        self.mySavingsSourceExportedAt = mySavingsSourceExportedAt
         self.amount = amount
         self.date = date
         self.category = category

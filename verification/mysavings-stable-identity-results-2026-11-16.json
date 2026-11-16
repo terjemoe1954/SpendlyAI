@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "sourceFileRecords": 283,
+  "productionDataModified": false,
+  "published": true,
+  "checks": [
+    "repeat import: no duplicates",
+    "source-only update: updated in place",
+    "local edit: preserved and conflict shown",
+    "older export: cannot revert newer data",
+    "backup restore: source identity and conflict protection preserved",
+    "old local store migration: financial data preserved"
+  ],
+  "legacyImportPolicy": "Import the original reference file before a changed export. SpendlyAI requires explicit linking; uncertain matches remain conflicts. New records alongside untracked data require explicit review.",
+  "releaseRequirements": [
+    "Completed: signed build uploaded and verified Testing in the existing Internal group."
+  ]
+}

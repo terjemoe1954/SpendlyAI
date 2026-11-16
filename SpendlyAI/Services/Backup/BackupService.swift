@@ -37,6 +37,9 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus?
+        var mySavingsSourceID: String? = nil
+        var mySavingsSourceFingerprint: String? = nil
+        var mySavingsSourceExportedAt: Date? = nil
     }
 
     struct IncomeRecord: Codable, Equatable, Sendable {
@@ -51,6 +54,9 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus?
+        var mySavingsSourceID: String? = nil
+        var mySavingsSourceFingerprint: String? = nil
+        var mySavingsSourceExportedAt: Date? = nil
 
         init(
             amount: String,
@@ -63,7 +69,10 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             isActive: Bool = true,
             dueDate: Date? = nil,
             settledDate: Date? = nil,
-            paymentStatus: PaymentStatus? = nil
+            paymentStatus: PaymentStatus? = nil,
+            mySavingsSourceID: String? = nil,
+            mySavingsSourceFingerprint: String? = nil,
+            mySavingsSourceExportedAt: Date? = nil
         ) {
             self.amount = amount
             self.date = date
@@ -76,11 +85,14 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             self.dueDate = dueDate
             self.settledDate = settledDate
             self.paymentStatus = paymentStatus
+            self.mySavingsSourceID = mySavingsSourceID
+            self.mySavingsSourceFingerprint = mySavingsSourceFingerprint
+            self.mySavingsSourceExportedAt = mySavingsSourceExportedAt
         }
 
         private enum CodingKeys: String, CodingKey {
             case amount, date, category, customCategoryName, incomeDescription, notes, recurrence, isActive
-            case dueDate, settledDate, paymentStatus
+            case dueDate, settledDate, paymentStatus, mySavingsSourceID, mySavingsSourceFingerprint, mySavingsSourceExportedAt
         }
 
         init(from decoder: any Decoder) throws {
@@ -96,6 +108,9 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
             dueDate = try container.decodeIfPresent(Date.self, forKey: .dueDate)
             settledDate = try container.decodeIfPresent(Date.self, forKey: .settledDate)
             paymentStatus = try container.decodeIfPresent(PaymentStatus.self, forKey: .paymentStatus)
+            mySavingsSourceID = try container.decodeIfPresent(String.self, forKey: .mySavingsSourceID)
+            mySavingsSourceFingerprint = try container.decodeIfPresent(String.self, forKey: .mySavingsSourceFingerprint)
+            mySavingsSourceExportedAt = try container.decodeIfPresent(Date.self, forKey: .mySavingsSourceExportedAt)
         }
     }
 
@@ -111,6 +126,9 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus?
+        var mySavingsSourceID: String? = nil
+        var mySavingsSourceFingerprint: String? = nil
+        var mySavingsSourceExportedAt: Date? = nil
     }
 
     struct CustomCategoryRecord: Codable, Equatable, Sendable {
@@ -248,7 +266,10 @@ struct BackupService {
                     notes: $0.notes,
                     dueDate: $0.dueDate,
                     settledDate: $0.settledDate,
-                    paymentStatus: $0.paymentStatus
+                    paymentStatus: $0.paymentStatus,
+                    mySavingsSourceID: $0.mySavingsSourceID,
+                    mySavingsSourceFingerprint: $0.mySavingsSourceFingerprint,
+                    mySavingsSourceExportedAt: $0.mySavingsSourceExportedAt
                 )
             },
             incomes: incomes.map {
@@ -263,7 +284,10 @@ struct BackupService {
                     isActive: $0.isActive,
                     dueDate: $0.dueDate,
                     settledDate: $0.settledDate,
-                    paymentStatus: $0.paymentStatus
+                    paymentStatus: $0.paymentStatus,
+                    mySavingsSourceID: $0.mySavingsSourceID,
+                    mySavingsSourceFingerprint: $0.mySavingsSourceFingerprint,
+                    mySavingsSourceExportedAt: $0.mySavingsSourceExportedAt
                 )
             },
             fixedExpenses: fixedExpenses.map {
@@ -278,7 +302,10 @@ struct BackupService {
                     isActive: $0.isActive,
                     dueDate: $0.dueDate,
                     settledDate: $0.settledDate,
-                    paymentStatus: $0.paymentStatus
+                    paymentStatus: $0.paymentStatus,
+                    mySavingsSourceID: $0.mySavingsSourceID,
+                    mySavingsSourceFingerprint: $0.mySavingsSourceFingerprint,
+                    mySavingsSourceExportedAt: $0.mySavingsSourceExportedAt
                 )
             },
             savingsGoals: savingsGoals.map {
@@ -363,7 +390,10 @@ struct BackupService {
                         notes: item.notes,
                         dueDate: item.dueDate,
                         settledDate: item.settledDate,
-                        paymentStatus: item.paymentStatus ?? .settled
+                        paymentStatus: item.paymentStatus ?? .settled,
+                        mySavingsSourceID: item.mySavingsSourceID,
+                        mySavingsSourceFingerprint: item.mySavingsSourceFingerprint,
+                        mySavingsSourceExportedAt: item.mySavingsSourceExportedAt
                     ))
                 }
 
@@ -379,7 +409,10 @@ struct BackupService {
                         isActive: item.isActive,
                         dueDate: item.dueDate,
                         settledDate: item.settledDate,
-                        paymentStatus: item.paymentStatus ?? .settled
+                        paymentStatus: item.paymentStatus ?? .settled,
+                        mySavingsSourceID: item.mySavingsSourceID,
+                        mySavingsSourceFingerprint: item.mySavingsSourceFingerprint,
+                        mySavingsSourceExportedAt: item.mySavingsSourceExportedAt
                     ))
                 }
 
@@ -395,7 +428,10 @@ struct BackupService {
                         isActive: item.isActive,
                         dueDate: item.dueDate,
                         settledDate: item.settledDate,
-                        paymentStatus: item.paymentStatus ?? .settled
+                        paymentStatus: item.paymentStatus ?? .settled,
+                        mySavingsSourceID: item.mySavingsSourceID,
+                        mySavingsSourceFingerprint: item.mySavingsSourceFingerprint,
+                        mySavingsSourceExportedAt: item.mySavingsSourceExportedAt
                     ))
                 }
 
