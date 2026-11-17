@@ -17,6 +17,11 @@ final class FixedExpense {
     var dueDate: Date?
     var settledDate: Date?
     var paymentStatusRawValue: String?
+    var paymentHistoryData: Data?
+
+    var paymentHistory: [FixedExpensePayment] {
+        (try? FixedExpensePaymentService.history(for: self)) ?? []
+    }
 
     var paymentStatus: PaymentStatus {
         get { paymentStatusRawValue.flatMap(PaymentStatus.init(rawValue:)) ?? .settled }

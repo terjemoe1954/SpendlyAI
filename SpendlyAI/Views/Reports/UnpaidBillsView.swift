@@ -10,6 +10,8 @@ struct UnpaidBillsView: View {
     @Query private var fixedExpenses: [FixedExpense]
     @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
+    @State private var saveError = false
+
     let overdueOnly: Bool
 
     init(overdueOnly: Bool = false) {
@@ -28,7 +30,8 @@ struct UnpaidBillsView: View {
             return UnpaidBill(transaction: transaction)
         }
         let recurringBills = fixedExpenses.compactMap { expense -> UnpaidBill? in
-            guard expense.isActive, let dueDate = expense.dueDate else { return nil }
+            guard expense.isActive else { return nil }
+            let dueDate = FixedExpensePaymentService.currentDueDate(for: expense)
             let status = expense.paymentStatus.effectiveStatus(dueDate: dueDate)
             guard status == .pending || status == .overdue,
                   !overdueOnly || status == .overdue else { return nil }
@@ -74,6 +77,9 @@ struct UnpaidBillsView: View {
                 Text(overdueOnly ? "unpaid.overdue.section" : "unpaid.all.section")
             }
         }
+        .alert("payment.quickEdit.error.title", isPresented: $saveError) {
+            Button("common.done", role: .cancel) { }
+        } message: { Text("payment.quickEdit.error.message") }
         .navigationTitle(overdueOnly ? "unpaid.overdue.title" : "unpaid.title")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -86,22 +92,22 @@ struct UnpaidBillsView: View {
     }
 
     private func markPaid(_ bill: UnpaidBill) {
-        let paymentDate = Date.now
-        switch bill.source {
-        case .transaction(let transaction):
-            transaction.paymentStatus = .settled
-            transaction.settledDate = paymentDate
-        case .fixedExpense(let expense):
-            expense.settledDate = paymentDate
-            if let nextDate = nextOccurrence(after: bill.dueDate, expense: expense) {
-                expense.dueDate = nextDate
-                expense.paymentStatus = .pending
-            } else {
-                expense.paymentStatus = .settled
-                expense.isActive = false
+        do {
+            switch bill.source {
+            case .transaction(let transaction):
+                let previous = (transaction.paymentStatusRawValue, transaction.settledDate)
+                transaction.paymentStatus = .settled
+                transaction.settledDate = .now
+                do { try modelContext.save() }
+                catch {
+                    (transaction.paymentStatusRawValue, transaction.settledDate) = previous
+                    throw error
+                }
+            case .fixedExpense(let expense):
+                try FixedExpensePaymentService.recordPayment(for: expense, dueDate: bill.dueDate,
+                    paymentDate: .now, context: modelContext)
             }
-        }
-        try? modelContext.save()
+        } catch { saveError = true }
     }
 
     private func printBills() {
@@ -126,25 +132,7 @@ struct UnpaidBillsView: View {
         controller.present(animated: true)
     }
 
-    private func nextOccurrence(after date: Date, expense: FixedExpense) -> Date? {
-        let calendar = Calendar.current
-        switch expense.recurrence {
-        case .weekly:
-            return calendar.date(byAdding: .day, value: 7, to: date)
-        case .biweekly:
-            return calendar.date(byAdding: .day, value: 14, to: date)
-        case .monthly:
-            return calendar.date(byAdding: .month, value: 1, to: date)
-        case .quarterly:
-            return calendar.date(byAdding: .month, value: 3, to: date)
-        case .semiannual:
-            return calendar.date(byAdding: .month, value: 6, to: date)
-        case .yearly:
-            return calendar.date(byAdding: .year, value: 1, to: date)
-        case .custom:
-            return calendar.date(byAdding: .month, value: max(expense.customRecurrenceMonths, 1), to: date)
-        }
-    }
+
 }
 
 private struct UnpaidBill: Identifiable {

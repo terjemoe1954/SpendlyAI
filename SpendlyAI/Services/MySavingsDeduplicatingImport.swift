@@ -48,6 +48,7 @@ enum MySavingsDeduplicatingImport {
                 parts = ["income", money(x.amount), date(x.date), x.category.rawValue, x.customCategoryName ?? "", x.incomeDescription, x.notes ?? "", x.recurrence.rawValue, String(x.isActive), date(x.dueDate), date(x.settledDate), x.paymentStatus.rawValue]
             case .fixed(let x):
                 parts = ["fixed", x.name, money(x.amount), String(x.dueDay), x.category.rawValue, x.customCategoryName ?? "", x.recurrence.rawValue, String(x.customRecurrenceMonths), String(x.isActive), date(x.dueDate), date(x.settledDate), x.paymentStatus.rawValue]
+                if let data = x.paymentHistoryData { parts.append(data.base64EncodedString()) }
             }
             // Length-prefix fields so labels containing separators cannot collide.
             let bytes = parts.map { String($0.utf8.count) + ":" + $0 }.joined()

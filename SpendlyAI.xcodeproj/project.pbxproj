@@ -6,6 +6,23 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+        C03100000000000000000001 = {
+            isa = PBXContainerItemProxy;
+            containerPortal = A8A224B730543E2700C67DD7;
+            proxyType = 1;
+            remoteGlobalIDString = A8A224BE30543E2700C67DD7;
+            remoteInfo = SpendlyAI;
+        };
+/* End PBXContainerItemProxy section */
+/* Begin PBXTargetDependency section */
+        C03100000000000000000002 = {
+            isa = PBXTargetDependency;
+            target = A8A224BE30543E2700C67DD7;
+            targetProxy = C03100000000000000000001;
+        };
+/* End PBXTargetDependency section */
+
 /* Begin PBXFileReference section */
 		A8A224BF30543E2700C67DD7 /* SpendlyAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SpendlyAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A8A22529305442A900C67DD7 /* SpendlyAITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SpendlyAITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -98,6 +115,7 @@
 				A8A22526305442A900C67DD7 /* Frameworks */,
 				A8A22527305442A900C67DD7 /* Resources */,
 			);
+			dependencies = (C03100000000000000000002,);
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
@@ -122,6 +140,7 @@
 						CreatedOnToolsVersion = 27.0;
 					};
 					A8A22528305442A900C67DD7 = {
+						TestTargetID = A8A224BE30543E2700C67DD7;
 						CreatedOnToolsVersion = 27.0;
 					};
 				};
@@ -302,7 +321,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 32;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = 4LR68777XL;
 				ENABLE_PREVIEWS = YES;
@@ -318,7 +337,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.1;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.terjemoe.SpendlyAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -341,7 +360,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 29;
+				CURRENT_PROJECT_VERSION = 32;
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = 4LR68777XL;
 				ENABLE_PREVIEWS = YES;
@@ -357,7 +376,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.5.1;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.terjemoe.SpendlyAI;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -377,7 +396,7 @@
 		A8A2252E305442A900C67DD7 /* Debug configuration for PBXNativeTarget "SpendlyAITests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/SpendlyAI.app/SpendlyAI.debug.dylib";
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -403,7 +422,7 @@
 		A8A2252F305442A900C67DD7 /* Release configuration for PBXNativeTarget "SpendlyAITests" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/SpendlyAI.app/SpendlyAI.debug.dylib";
+				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;

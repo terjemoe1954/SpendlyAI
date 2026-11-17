@@ -107,7 +107,14 @@ struct ReportRobustnessTests {
             endDate: Date(timeIntervalSince1970: 1_702_592_000),
             currencyCode: currencyCode,
             generatedAt: Date(timeIntervalSince1970: 1_702_592_000),
-            summary: summary
+            summary: summary,
+            entries: summary.variableExpenseCategories.map {
+                ReportPDFEntry(kind: .expense, date: Date(timeIntervalSince1970: 1_700_000_000), title: $0.category.rawValue, amount: $0.amount, status: "Betalt", statusValue: .settled, category: $0.category.rawValue)
+            } + summary.fixedExpenseCategories.map {
+                ReportPDFEntry(kind: .expense, date: Date(timeIntervalSince1970: 1_700_000_000), title: $0.category.rawValue, amount: $0.amount, status: "Venter", statusValue: .pending, category: $0.category.rawValue)
+            },
+            sortDescription: "Dato",
+            statusDescription: "Alle"
         )
         return ReportPDFGenerator().makePDF(
             for: request,

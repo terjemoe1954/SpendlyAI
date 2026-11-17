@@ -322,12 +322,12 @@ private enum StatisticsPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-private enum StatisticsEntryKind {
+enum StatisticsEntryKind {
     case income
     case expense
 }
 
-private struct StatisticsEntry: Identifiable {
+struct StatisticsEntry: Identifiable {
     let id: String
     let title: String
     let date: Date
@@ -347,7 +347,7 @@ private struct CategoryBalance: Identifiable {
     let entries: [StatisticsEntry]
 }
 
-private enum StatisticsCategory: String, CaseIterable, Identifiable {
+enum StatisticsCategory: String, CaseIterable, Identifiable {
     case subscriptions
     case other
     case groceries
@@ -445,7 +445,7 @@ private enum StatisticsCategory: String, CaseIterable, Identifiable {
     }
 }
 
-private struct StatisticsCalculator {
+struct StatisticsCalculator {
     private let calendar = Calendar.current
 
     func entries(
@@ -503,33 +503,17 @@ private struct StatisticsCalculator {
         for expense: FixedExpense,
         interval: DateInterval
     ) -> [StatisticsEntry] {
-        guard expense.isActive else { return [] }
-
-        let firstOccurrence = expense.dueDate
-            ?? firstMonthlyDate(day: expense.dueDay, onOrAfter: interval.start)
-        guard var occurrence = firstOccurrence else { return [] }
-
-        while occurrence < interval.start {
-            guard let next = nextOccurrence(after: occurrence, expense: expense),
-                  next > occurrence else { return [] }
-            occurrence = next
+        let paid = expense.paymentHistory.filter { $0.dueDate >= interval.start && $0.dueDate < interval.end }.map {
+            StatisticsEntry(id: "fixed-paid-\($0.id)", title: $0.name, date: $0.dueDate,
+                            amount: $0.amount, category: StatisticsCategory(expenseCategory: $0.category), kind: .expense)
         }
-
-        var result: [StatisticsEntry] = []
-        while occurrence < interval.end {
-            result.append(StatisticsEntry(
-                id: "fixed-\(expense.persistentModelID)-\(occurrence.timeIntervalSince1970)",
-                title: expense.name,
-                date: occurrence,
-                amount: expense.amount,
-                category: StatisticsCategory(expenseCategory: expense.category),
-                kind: .expense
-            ))
-            guard let next = nextOccurrence(after: occurrence, expense: expense),
-                  next > occurrence else { break }
-            occurrence = next
-        }
-        return result
+        let pending = FixedExpensePaymentService.unpaidDates(for: expense, from: interval.start, through: interval.end)
+            .filter { $0 < interval.end }.map { date in
+                StatisticsEntry(id: "fixed-\(expense.persistentModelID)-\(date.timeIntervalSince1970)",
+                    title: expense.name, date: date, amount: expense.amount,
+                    category: StatisticsCategory(expenseCategory: expense.category), kind: .expense)
+            }
+        return paid + pending
     }
 
     private func profileIncomeEntries(

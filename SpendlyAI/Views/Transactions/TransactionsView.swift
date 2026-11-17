@@ -14,6 +14,7 @@ struct TransactionsView: View {
     @Query(sort: \CustomCategory.name) private var customCategories: [CustomCategory]
     @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
+    @State private var paymentItem: ActivityItem?
     @State private var showsNewTransaction = false
     @State private var showsNewIncome = false
     @State private var selectedTransaction: Transaction?
@@ -184,6 +185,7 @@ struct TransactionsView: View {
                     ActivityList(
                         items: activityItems,
                         currencyCode: currencyCode,
+                        onPayment: { paymentItem = $0 },
                         onSelect: select,
                         onCopy: copy,
                         onDelete: delete
@@ -230,6 +232,9 @@ struct TransactionsView: View {
                     }
                     .accessibilityLabel("common.add")
                 }
+            }
+            .sheet(item: $paymentItem) { item in
+                ActivityPaymentSheet(item: item)
             }
             .sheet(isPresented: $showsFilters) {
                 TransactionFilterView(
@@ -363,69 +368,10 @@ struct TransactionsView: View {
     }
 
     private func nextDueDate(for expense: FixedExpense, from date: Date = .now) -> Date? {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: date)
-
-        guard var dueDate = expense.dueDate else {
-            return nextMonthlyDueDate(forDay: expense.dueDay, from: today)
-        }
-
-        dueDate = calendar.startOfDay(for: dueDate)
-        while dueDate < today {
-            guard let nextDate = nextOccurrence(
-                after: dueDate,
-                recurrence: expense.recurrence,
-                customMonths: expense.customRecurrenceMonths
-            ), nextDate > dueDate else {
-                return nil
-            }
-            dueDate = nextDate
-        }
-
-        return dueDate
+        FixedExpensePaymentService.currentDueDate(for: expense, now: date)
     }
 
-    private func nextMonthlyDueDate(forDay day: Int, from date: Date) -> Date? {
-        let calendar = Calendar.current
-        let safeDay = min(max(day, 1), 28)
-        var components = calendar.dateComponents([.year, .month], from: date)
-        components.day = safeDay
 
-        guard let dueDateThisMonth = calendar.date(from: components) else {
-            return nil
-        }
-
-        if dueDateThisMonth >= date {
-            return dueDateThisMonth
-        }
-
-        return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
-    }
-
-    private func nextOccurrence(
-        after date: Date,
-        recurrence: ExpenseRecurrence,
-        customMonths: Int
-    ) -> Date? {
-        let calendar = Calendar.current
-
-        return switch recurrence {
-        case .weekly:
-            calendar.date(byAdding: .day, value: 7, to: date)
-        case .biweekly:
-            calendar.date(byAdding: .day, value: 14, to: date)
-        case .monthly:
-            calendar.date(byAdding: .month, value: 1, to: date)
-        case .quarterly:
-            calendar.date(byAdding: .month, value: 3, to: date)
-        case .semiannual:
-            calendar.date(byAdding: .month, value: 6, to: date)
-        case .yearly:
-            calendar.date(byAdding: .year, value: 1, to: date)
-        case .custom:
-            calendar.date(byAdding: .month, value: max(customMonths, 1), to: date)
-        }
-    }
 }
 
 private struct ActivitySummary {
@@ -763,21 +709,139 @@ private enum ActivityItem: Identifiable {
     }
 }
 
+private extension ActivityItem {
+    var paymentKind: PaymentKind {
+        if case .income = self { return .income }
+        return .expense
+    }
+
+    var recordedPaymentDate: Date? {
+        switch self {
+        case .purchase(let value): value.settledDate
+        case .income(let value): value.settledDate
+        case .fixedExpense(let value, _): value.settledDate
+        }
+    }
+}
+
+private struct ActivityPaymentSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    let item: ActivityItem
+    @State private var paymentDate: Date
+    @State private var saveError = false
+
+    init(item: ActivityItem) {
+        self.item = item
+        _paymentDate = State(initialValue: item.recordedPaymentDate ?? item.date)
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    DatePicker(
+                        item.paymentKind == .income ? "payment.receivedDate" : "payment.paidDate",
+                        selection: $paymentDate,
+                        displayedComponents: .date
+                    )
+                    Button(item.paymentKind == .income ? "paymentStatus.received" : "paymentStatus.paid") {
+                        save(status: .settled)
+                    }
+                    if item.paymentStatus == .settled {
+                        Button("paymentStatus.pending") { save(status: .pending) }
+                    }
+                }
+            }
+            .navigationTitle(item.paymentStatus.titleKey(for: item.paymentKind))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("common.cancel") { dismiss() }
+                }
+            }
+            .alert("payment.quickEdit.error.title", isPresented: $saveError) {
+                Button("common.done", role: .cancel) { }
+            } message: {
+                Text("payment.quickEdit.error.message")
+            }
+        }
+        .presentationDetents([.medium])
+    }
+
+    private func save(status: PaymentStatus) {
+        if case .fixedExpense(let expense, let dueDate) = item, status == .settled {
+            do {
+                try FixedExpensePaymentService.recordPayment(for: expense, dueDate: dueDate,
+                    paymentDate: paymentDate, context: modelContext)
+                dismiss()
+            } catch { saveError = true }
+            return
+        }
+
+        let oldStatus: PaymentStatus
+        let oldDate = item.recordedPaymentDate
+        switch item {
+        case .purchase(let value): oldStatus = value.paymentStatus
+        case .income(let value): oldStatus = value.paymentStatus
+        case .fixedExpense(let value, _): oldStatus = value.paymentStatus
+        }
+        set(status: status, date: status == .settled ? paymentDate : nil)
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            set(status: oldStatus, date: oldDate)
+            saveError = true
+        }
+    }
+
+    private func set(status: PaymentStatus, date: Date?) {
+        switch item {
+        case .purchase(let value):
+            value.paymentStatus = status
+            value.settledDate = date
+        case .income(let value):
+            value.paymentStatus = status
+            value.settledDate = date
+        case .fixedExpense(let value, _):
+            value.paymentStatus = status
+            value.settledDate = date
+        }
+    }
+}
+
 private struct ActivityList: View {
     let items: [ActivityItem]
     let currencyCode: String
+    let onPayment: (ActivityItem) -> Void
     let onSelect: (ActivityItem) -> Void
     let onCopy: (ActivityItem) -> Void
     let onDelete: (ActivityItem) -> Void
 
     var body: some View {
         List(items) { item in
-            Button {
-                onSelect(item)
-            } label: {
-                ActivityRow(item: item, currencyCode: currencyCode)
+            HStack(spacing: 8) {
+                Button {
+                    onPayment(item)
+                } label: {
+                    Image(systemName: item.paymentStatus == .settled ? "checkmark.circle.fill" : "circle")
+                        .font(.title2)
+                        .foregroundStyle(item.paymentStatus == .settled ? Color.green : Color.secondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(item.paymentStatus.titleKey(for: item.paymentKind))
+                .accessibilityHint("payment.quickEdit.hint")
+
+                Button {
+                    onSelect(item)
+                } label: {
+                    ActivityRow(item: item, currencyCode: currencyCode)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                 Button {
                     onSelect(item)
@@ -882,6 +946,15 @@ private struct FixedExpenseActivityRowContent: View {
                 }
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                if let last = expense.paymentHistory.last {
+                    HStack(spacing: 4) {
+                        Text("fixedPayment.lastPaid")
+                        Text(last.dueDate, format: .dateTime.day().month().year())
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.green)
+                }
 
                 Text(expense.paymentStatus.effectiveStatus(dueDate: dueDate).titleKey(for: .expense))
                     .font(.caption)

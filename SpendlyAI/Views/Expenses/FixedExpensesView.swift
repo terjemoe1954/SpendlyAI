@@ -376,6 +376,8 @@ struct FixedExpenseEditorView: View {
 
     let expense: FixedExpense?
 
+    @State private var saveError = false
+    @State private var historicalPaymentDates: [UUID: Date]
     @State private var name: String
     @State private var amount: String
     @State private var dueDate: Date
@@ -389,6 +391,7 @@ struct FixedExpenseEditorView: View {
 
     init(expense: FixedExpense?) {
         self.expense = expense
+        _historicalPaymentDates = State(initialValue: Dictionary(uniqueKeysWithValues: (expense?.paymentHistory ?? []).map { ($0.id, $0.paymentDate) }))
         _name = State(initialValue: expense?.name ?? "")
         _amount = State(initialValue: expense?.amount.description ?? "")
         _dueDate = State(initialValue: expense?.dueDate ?? Self.date(for: expense?.dueDay ?? Calendar.current.component(.day, from: .now)))
@@ -462,8 +465,31 @@ struct FixedExpenseEditorView: View {
                     }
 
                     Toggle("fixedExpenses.active", isOn: $isActive)
+                    Text("fixedPayment.active.help")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if let expense, !expense.paymentHistory.isEmpty {
+                    Section("fixedPayment.history") {
+                        ForEach(expense.paymentHistory.reversed()) { payment in
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(payment.dueDate, format: .dateTime.day().month().year())
+                                    Spacer()
+                                    Text(payment.amount, format: .number.precision(.fractionLength(2)))
+                                }
+                                DatePicker("payment.paidDate", selection: Binding(
+                                    get: { historicalPaymentDates[payment.id] ?? payment.paymentDate },
+                                    set: { historicalPaymentDates[payment.id] = $0 }
+                                ), displayedComponents: .date)
+                            }
+                        }
+                    }
                 }
             }
+            .alert("payment.quickEdit.error.title", isPresented: $saveError) {
+                Button("common.done", role: .cancel) { }
+            } message: { Text("payment.quickEdit.error.message") }
             .navigationTitle(expense == nil ? "fixedExpenses.add" : "fixedExpenses.edit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -487,9 +513,18 @@ struct FixedExpenseEditorView: View {
         guard let parsedAmount else { return }
 
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let dueDay = Calendar.current.component(.day, from: dueDate)
+        let dueDay: Int
+        if let expense, let previousDate = expense.dueDate,
+           Calendar.current.isDate(previousDate, inSameDayAs: dueDate) {
+            dueDay = expense.dueDay
+        } else {
+            dueDay = Calendar.current.component(.day, from: dueDate)
+        }
 
+        let oldHistoryData = expense?.paymentHistoryData
+        let savedExpense: FixedExpense
         if let expense {
+            savedExpense = expense
             expense.name = trimmedName
             expense.amount = parsedAmount
             expense.dueDay = dueDay
@@ -499,10 +534,10 @@ struct FixedExpenseEditorView: View {
             expense.customRecurrenceMonths = customRecurrenceMonths
             expense.isActive = isActive
             expense.dueDate = dueDate
-            expense.settledDate = paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil
-            expense.paymentStatus = paymentStatus
+            expense.settledDate = paymentStatus == .withdrawn ? settledDate : nil
+            expense.paymentStatus = paymentStatus == .settled ? .pending : paymentStatus
         } else {
-            modelContext.insert(FixedExpense(
+            savedExpense = FixedExpense(
                 name: trimmedName,
                 amount: parsedAmount,
                 dueDay: dueDay,
@@ -512,13 +547,33 @@ struct FixedExpenseEditorView: View {
                 customRecurrenceMonths: customRecurrenceMonths,
                 isActive: isActive,
                 dueDate: dueDate,
-                settledDate: paymentStatus == .settled || paymentStatus == .withdrawn ? settledDate : nil,
-                paymentStatus: paymentStatus
-            ))
+                settledDate: paymentStatus == .withdrawn ? settledDate : nil,
+                paymentStatus: paymentStatus == .settled ? .pending : paymentStatus
+            )
+            modelContext.insert(savedExpense)
         }
 
-        try? modelContext.save()
-        dismiss()
+        do {
+            var records = try FixedExpensePaymentService.history(for: savedExpense)
+            var changed = false
+            for index in records.indices {
+                if let date = historicalPaymentDates[records[index].id], date != records[index].paymentDate {
+                    records[index].paymentDate = date
+                    changed = true
+                }
+            }
+            if changed { savedExpense.paymentHistoryData = try JSONEncoder().encode(records) }
+            if paymentStatus == .settled {
+                try FixedExpensePaymentService.recordPayment(for: savedExpense, dueDate: dueDate,
+                    paymentDate: settledDate, context: modelContext)
+            } else {
+                try modelContext.save()
+            }
+            dismiss()
+        } catch {
+            savedExpense.paymentHistoryData = oldHistoryData
+            saveError = true
+        }
     }
 
     private static func date(for day: Int) -> Date {

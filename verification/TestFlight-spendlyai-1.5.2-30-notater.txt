@@ -1,0 +1,11 @@
+Betalingsring og redigerbar betalingsdato under Poster.
+
+• Trykk på ringen ved en ubetalt post. Kontroller forhåndsvalgt dato, endre dato om ønskelig og trykk Betalt.
+• Kontroller at posten får grønn hake. Åpne ringen igjen og kontroller at betalingsdatoen er bevart.
+• Endre betalingsdato, lukk og åpne appen igjen, og kontroller at datoen er lagret.
+• Sett en betalt post tilbake til Venter og kontroller at haken forsvinner.
+• Kontroller også inntekter (Mottatt) og faste utgifter.
+• Avbryt datovelgeren og kontroller at posten er uendret.
+• Trykk på selve posten for vanlig redigering; sveip for kopiering og sletting.
+
+Faste utgifter bruker samme betalingsstatus som i det vanlige redigeringsskjemaet. Ringen oppretter ikke en separat betalingshistorikk per gjentakelse.

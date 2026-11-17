@@ -303,28 +303,7 @@ struct DashboardView: View {
     }
 
     private func nextDueDate(for expense: FixedExpense, from date: Date = .now) -> Date {
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: date)
-        var occurrence = expense.dueDate.map { calendar.startOfDay(for: $0) }
-            ?? calendar.date(
-                bySetting: .day,
-                value: min(max(expense.dueDay, 1), 28),
-                of: today
-            )
-            ?? today
-
-        if expense.dueDate == nil, occurrence < today {
-            occurrence = calendar.date(byAdding: .month, value: 1, to: occurrence) ?? occurrence
-        }
-
-        while occurrence < today {
-            guard let next = DashboardSummaryCalculator(calendar: calendar).nextExpenseDate(
-                after: occurrence,
-                expense: expense
-            ), next > occurrence else { break }
-            occurrence = next
-        }
-        return occurrence
+        FixedExpensePaymentService.currentDueDate(for: expense, now: date)
     }
 
     private func savingsProgress(for goal: SavingsGoal) -> Double {
@@ -388,7 +367,7 @@ private enum DashboardPeriod: String, CaseIterable, Identifiable {
     }
 }
 
-private struct DashboardPeriodSummary {
+struct DashboardPeriodSummary {
     var totalIncome = Decimal.zero
     var totalExpenses = Decimal.zero
     var receivableIncome = Decimal.zero
@@ -396,7 +375,7 @@ private struct DashboardPeriodSummary {
     var daysUntilNextIncome = 0
 }
 
-private struct DashboardSummaryCalculator {
+struct DashboardSummaryCalculator {
     private let calendar: Calendar
 
     init(calendar: Calendar = .current) {
@@ -454,8 +433,14 @@ private struct DashboardSummaryCalculator {
             }
         }
 
-        for expense in fixedExpenses where expense.isActive {
-            for _ in fixedExpenseOccurrences(for: expense, interval: interval) {
+        for expense in fixedExpenses {
+            for payment in expense.paymentHistory where payment.dueDate >= interval.start && payment.dueDate < interval.end {
+                result.totalExpenses += payment.amount
+                result.entryCount += 1
+            }
+            for dueDate in FixedExpensePaymentService.unpaidDates(for: expense, from: interval.start,
+                                                                through: interval.end, calendar: calendar)
+                where dueDate < interval.end {
                 result.totalExpenses += expense.amount
                 result.entryCount += 1
             }

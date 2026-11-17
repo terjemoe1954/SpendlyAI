@@ -97,74 +97,19 @@ struct ReportSummaryService {
         calendar: Calendar
     ) -> FixedExpenseReportSummary {
         expenses.reduce(into: FixedExpenseReportSummary()) { result, expense in
-            guard expense.isActive,
-                  expense.category.countsAsSpending,
-                  var dueDate = firstDueDate(
-                    forDay: expense.dueDay,
-                    from: startDate,
-                    calendar: calendar
-                  ),
-                  dueDate <= endDate else {
-                return
+            for payment in expense.paymentHistory where payment.dueDate >= startDate
+                && payment.dueDate <= endDate && payment.category.countsAsSpending {
+                result.total += payment.amount
+                result.occurrenceCount += 1
+                result.categoryTotals[payment.category, default: .zero] += payment.amount
             }
-
-            while dueDate <= endDate {
+            guard expense.category.countsAsSpending else { return }
+            for _ in FixedExpensePaymentService.unpaidDates(for: expense, from: startDate,
+                                                           through: endDate, calendar: calendar) {
                 result.total += expense.amount
                 result.occurrenceCount += 1
                 result.categoryTotals[expense.category, default: .zero] += expense.amount
-
-                guard let nextDate = nextDueDate(
-                    after: dueDate,
-                    recurrence: expense.recurrence,
-                    customMonths: expense.customRecurrenceMonths,
-                    calendar: calendar
-                ), nextDate > dueDate else {
-                    break
-                }
-                dueDate = nextDate
             }
-        }
-    }
-
-    private func firstDueDate(
-        forDay day: Int,
-        from date: Date,
-        calendar: Calendar
-    ) -> Date? {
-        let safeDay = min(max(day, 1), 28)
-        var components = calendar.dateComponents([.year, .month], from: date)
-        components.day = safeDay
-
-        guard let dueDateThisMonth = calendar.date(from: components) else {
-            return nil
-        }
-        if dueDateThisMonth >= calendar.startOfDay(for: date) {
-            return dueDateThisMonth
-        }
-        return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
-    }
-
-    private func nextDueDate(
-        after date: Date,
-        recurrence: ExpenseRecurrence,
-        customMonths: Int,
-        calendar: Calendar
-    ) -> Date? {
-        switch recurrence {
-        case .weekly:
-            calendar.date(byAdding: .day, value: 7, to: date)
-        case .biweekly:
-            calendar.date(byAdding: .day, value: 14, to: date)
-        case .monthly:
-            calendar.date(byAdding: .month, value: 1, to: date)
-        case .quarterly:
-            calendar.date(byAdding: .month, value: 3, to: date)
-        case .semiannual:
-            calendar.date(byAdding: .month, value: 6, to: date)
-        case .custom:
-            calendar.date(byAdding: .month, value: max(customMonths, 1), to: date)
-        case .yearly:
-            calendar.date(byAdding: .year, value: 1, to: date)
         }
     }
 }

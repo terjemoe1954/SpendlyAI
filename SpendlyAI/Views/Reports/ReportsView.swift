@@ -388,54 +388,19 @@ struct ReportsView: View {
         from startDate: Date,
         through endDate: Date
     ) -> [ReportPDFEntry] {
-        guard expense.isActive else { return [] }
-
-        let calendar = Calendar.current
-        let occurrence = expense.dueDate ?? firstDueDate(
-            day: expense.dueDay,
-            onOrAfter: startDate,
-            calendar: calendar
-        )
-        guard var occurrence else { return [] }
-
-        while occurrence < startDate {
-            guard let next = nextOccurrence(
-                after: occurrence,
-                recurrence: expense.recurrence,
-                customMonths: expense.customRecurrenceMonths,
-                calendar: calendar
-            ) else { return [] }
-            occurrence = next
+        let paid = expense.paymentHistory.filter { $0.dueDate >= startDate && $0.dueDate <= endDate }.map {
+            ReportPDFEntry(kind: .expense, date: $0.dueDate, title: $0.name, amount: $0.amount,
+                status: statusTitle(.settled, kind: .expense), statusValue: .settled,
+                category: $0.customCategoryName ?? localizedFixedExpenseCategoryTitle($0.category))
         }
-
-        var entries: [ReportPDFEntry] = []
-        while occurrence <= endDate {
-            let isOriginalOccurrence = expense.dueDate.map {
-                calendar.isDate($0, inSameDayAs: occurrence)
-            } ?? false
-            let status = isOriginalOccurrence
-                ? expense.effectivePaymentStatus()
-                : PaymentStatus.pending.effectiveStatus(dueDate: occurrence)
-
-            entries.append(ReportPDFEntry(
-                kind: .expense,
-                date: occurrence,
-                title: expense.name,
-                amount: expense.amount,
-                status: statusTitle(status, kind: .expense),
-                statusValue: status,
-                category: localizedFixedExpenseCategoryTitle(expense.category)
-            ))
-
-            guard let next = nextOccurrence(
-                after: occurrence,
-                recurrence: expense.recurrence,
-                customMonths: expense.customRecurrenceMonths,
-                calendar: calendar
-            ), next > occurrence else { break }
-            occurrence = next
+        let pending = FixedExpensePaymentService.unpaidDates(for: expense, from: startDate, through: endDate).map { date in
+            let isCurrent = expense.dueDate.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false
+            let status = isCurrent ? expense.effectivePaymentStatus() : PaymentStatus.pending.effectiveStatus(dueDate: date)
+            return ReportPDFEntry(kind: .expense, date: date, title: expense.name, amount: expense.amount,
+                status: statusTitle(status, kind: .expense), statusValue: status,
+                category: expense.customCategoryName ?? localizedFixedExpenseCategoryTitle(expense.category))
         }
-        return entries
+        return paid + pending
     }
 
     private func firstDueDate(day: Int, onOrAfter date: Date, calendar: Calendar) -> Date? {

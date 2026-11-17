@@ -1,0 +1,23 @@
+{
+  "app": "SpendlyAI",
+  "version": "1.5.2",
+  "build": "30",
+  "archive": "/Users/terjemoe/Library/Developer/Xcode/Archives/2026-11-17/spendlyai-1.5.2-30.xcarchive",
+  "state": "testing",
+  "upload": "succeeded",
+  "cloudSchema": "not-used",
+  "testerGroup": "Internal",
+  "testNotesSaved": true,
+  "validation": {
+    "debugBuild": "passed",
+    "releaseArchive": "passed",
+    "testCompilation": "passed after updating stale PDF request fixtures",
+    "automatedTests": "blocked: simulator test execution did not complete; interrupted without resetting or stopping simulators",
+    "visualPaymentTest": "not verified"
+  },
+  "uploadLog": "/tmp/spendly-30-upload.log",
+  "buildURL": "https://appstoreconnect.apple.com/teams/69a6de6f-0408-47e3-e053-5b8c7c11a4d1/apps/6811385154/testflight/ios/fa7cad1e-73c8-4db7-9dca-821ffb7c24a4",
+  "exportCompliance": "completed",
+  "testerAccessVerified": true,
+  "testerStatusObserved": "Internal tester shows Installed 1.5.2 (30)"
+}

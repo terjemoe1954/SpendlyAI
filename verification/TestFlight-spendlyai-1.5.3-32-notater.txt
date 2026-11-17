@@ -1,0 +1,15 @@
+Faste poster: betaling gjelder ett bestemt forfall, og neste forfall blir ubetalt automatisk.
+
+• Opprett en aktiv månedlig fast post med forfall denne måneden.
+• Under Poster: trykk på ringen, velg betalingsdato og bekreft Betalt.
+• Kontroller at neste måneds forfallsdato vises som Venter/ubetalt og at Aktiv fortsatt er på.
+• Åpne posten: Betalinger per forfall skal vise det betalte forfallet, beløpet og betalingsdatoen.
+• Endre en tidligere betalingsdato og trykk Lagre. Neste forfallsdato skal være uendret. Avbryt skal forkaste datoendringer.
+• Lukk og åpne appen igjen. Både historikken og neste ubetalte forfall skal være bevart.
+• Test betaling før og etter forfallsdato: neste dato skal følge den faste forfallsplanen, ikke betalingsdagen.
+• Test den 31.: 31. januar → 28./29. februar → 31. mars.
+• Test også kvartalsvis, halvårlig, årlig og egendefinert gjentakelse, samt betaling fra Ubetalte regninger.
+• Ubetalte, gamle forfall skal bli stående til de betales; betaling av ett forfall skal ikke hoppe over andre måneder.
+• Ta sikkerhetskopi og gjenopprett: betalingshistorikk og neste forfall skal være med.
+
+Eksisterende aktive faste poster som er registrert betalt med dato i forrige versjon, flyttes én gang til betalingshistorikken og får neste forfall som ubetalt. Inaktive poster forblir inaktive.

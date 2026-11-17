@@ -1040,7 +1040,12 @@ struct SpendlyAITests {
             endDate: date(year: 2026, month: 10, day: 31),
             currencyCode: "NOK",
             generatedAt: date(year: 2026, month: 11, day: 1),
-            summary: summary
+            summary: summary,
+            entries: summary.variableExpenseCategories.map {
+                ReportPDFEntry(kind: .expense, date: date(year: 2026, month: 1, day: 1), title: $0.category.rawValue, amount: $0.amount, status: "Betalt", statusValue: .settled, category: $0.category.rawValue)
+            },
+            sortDescription: "Dato",
+            statusDescription: "Alle"
         )
 
         let data = ReportPDFGenerator().makePDF(
@@ -1074,7 +1079,12 @@ struct SpendlyAITests {
             endDate: date(year: 2026, month: 12, day: 31),
             currencyCode: "NOK",
             generatedAt: date(year: 2027, month: 1, day: 1),
-            summary: summary
+            summary: summary,
+            entries: summary.variableExpenseCategories.map {
+                ReportPDFEntry(kind: .expense, date: date(year: 2026, month: 1, day: 1), title: $0.category.rawValue, amount: $0.amount, status: "Betalt", statusValue: .settled, category: $0.category.rawValue)
+            },
+            sortDescription: "Dato",
+            statusDescription: "Alle"
         )
 
         let data = ReportPDFGenerator().makePDF(for: request)

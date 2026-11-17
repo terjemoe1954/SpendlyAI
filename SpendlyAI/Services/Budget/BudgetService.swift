@@ -167,7 +167,7 @@ public struct BudgetService {
             while dueDate <= endDate {
                 expenseTotal += expense.amount
 
-                guard let nextDate = nextDueDate(after: dueDate, recurrence: expense.recurrence, customMonths: expense.customRecurrenceMonths),
+                guard let nextDate = nextDueDate(after: dueDate, dueDay: expense.dueDay, recurrence: expense.recurrence, customMonths: expense.customRecurrenceMonths),
                       nextDate > dueDate else {
                     break
                 }
@@ -216,6 +216,7 @@ public struct BudgetService {
         while occurrence < startDate {
             guard let nextDate = nextDueDate(
                 after: occurrence,
+                dueDay: expense.dueDay,
                 recurrence: expense.recurrence,
                 customMonths: expense.customRecurrenceMonths
             ), nextDate > occurrence else {
@@ -242,23 +243,9 @@ public struct BudgetService {
         return calendar.date(byAdding: .month, value: 1, to: dueDateThisMonth)
     }
 
-    private func nextDueDate(after date: Date, recurrence: ExpenseRecurrence, customMonths: Int) -> Date? {
-        switch recurrence {
-        case .weekly:
-            return calendar.date(byAdding: .day, value: 7, to: date)
-        case .biweekly:
-            return calendar.date(byAdding: .day, value: 14, to: date)
-        case .monthly:
-            return calendar.date(byAdding: .month, value: 1, to: date)
-        case .quarterly:
-            return calendar.date(byAdding: .month, value: 3, to: date)
-        case .semiannual:
-            return calendar.date(byAdding: .month, value: 6, to: date)
-        case .custom:
-            return calendar.date(byAdding: .month, value: max(customMonths, 1), to: date)
-        case .yearly:
-            return calendar.date(byAdding: .year, value: 1, to: date)
-        }
+    private func nextDueDate(after date: Date, dueDay: Int, recurrence: ExpenseRecurrence, customMonths: Int) -> Date? {
+        FixedExpensePaymentService.nextDueDate(after: date, dueDay: dueDay, recurrence: recurrence,
+                                               customMonths: customMonths, calendar: calendar)
     }
 }
 
@@ -309,6 +296,10 @@ extension BudgetService {
                         && (transaction.paymentStatus == .settled
                             || transaction.paymentStatus == .withdrawn)
                 )
+            } + fixedExpenses.flatMap { expense in
+                expense.paymentHistory.filter { $0.category.countsAsSpending }.map {
+                    BudgetTransaction(amount: $0.amount, date: $0.paymentDate, isSettled: true)
+                }
             },
             minimumBuffer: 0
         )

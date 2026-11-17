@@ -25,7 +25,10 @@ struct ReportPrivacyTests {
             endDate: Date(timeIntervalSince1970: 1_702_592_000),
             currencyCode: "NOK",
             generatedAt: Date(timeIntervalSince1970: 1_702_592_000),
-            summary: summary
+            summary: summary,
+            entries: [],
+            sortDescription: "Dato",
+            statusDescription: "Alle"
         )
 
         let data = ReportPDFGenerator().makePDF(

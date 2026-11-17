@@ -9,6 +9,7 @@ import SwiftUI
 struct RootView: View {
     @AppStorage(AppAppearance.storageKey) private var selectedAppearance = AppAppearance.system.rawValue
     @Environment(\.modelContext) private var modelContext
+    @State private var paymentMigrationError = false
     @Query(sort: \UserFinancialProfile.updatedAt, order: .reverse) private var profiles: [UserFinancialProfile]
 
     var body: some View {
@@ -19,10 +20,15 @@ struct RootView: View {
                 RootTabView()
             }
         }
+        .alert("payment.quickEdit.error.title", isPresented: $paymentMigrationError) {
+            Button("common.done", role: .cancel) { }
+        } message: { Text("payment.quickEdit.error.message") }
         .preferredColorScheme(AppAppearance(rawValue: selectedAppearance)?.colorScheme)
         .task(id: profiles.first?.persistentModelID) {
             CategoryMigrationService().migrateIfNeeded(modelContext: modelContext)
             removeLegacyProfileAmounts()
+            do { try FixedExpensePaymentService.migrateLegacyPayments(context: modelContext) }
+            catch { paymentMigrationError = true }
         }
     }
 

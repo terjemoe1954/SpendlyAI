@@ -126,6 +126,7 @@ struct SpendlyBackup: Codable, Equatable, Identifiable, Sendable {
         let dueDate: Date?
         let settledDate: Date?
         let paymentStatus: PaymentStatus?
+        var paymentHistoryData: Data? = nil
         var mySavingsSourceID: String? = nil
         var mySavingsSourceFingerprint: String? = nil
         var mySavingsSourceExportedAt: Date? = nil
@@ -303,6 +304,7 @@ struct BackupService {
                     dueDate: $0.dueDate,
                     settledDate: $0.settledDate,
                     paymentStatus: $0.paymentStatus,
+                    paymentHistoryData: $0.paymentHistoryData,
                     mySavingsSourceID: $0.mySavingsSourceID,
                     mySavingsSourceFingerprint: $0.mySavingsSourceFingerprint,
                     mySavingsSourceExportedAt: $0.mySavingsSourceExportedAt
@@ -417,7 +419,7 @@ struct BackupService {
                 }
 
                 for item in backup.fixedExpenses {
-                    modelContext.insert(FixedExpense(
+                    let expense = FixedExpense(
                         name: item.name,
                         amount: decimal(item.amount)!,
                         dueDay: item.dueDay,
@@ -432,7 +434,9 @@ struct BackupService {
                         mySavingsSourceID: item.mySavingsSourceID,
                         mySavingsSourceFingerprint: item.mySavingsSourceFingerprint,
                         mySavingsSourceExportedAt: item.mySavingsSourceExportedAt
-                    ))
+                    )
+                    expense.paymentHistoryData = item.paymentHistoryData
+                    modelContext.insert(expense)
                 }
 
                 for item in backup.savingsGoals {
